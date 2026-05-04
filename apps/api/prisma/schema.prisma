@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlanStatus {
+  FREE
+  PREMIUM
+}
+
+enum RewardType {
+  cashback
+  points
+  miles
+}
+
+enum CardType {
+  personal
+  business
+}
+
+enum PurchaseCategory {
+  DINING
+  GROCERIES
+  GAS
+  TRAVEL
+  FLIGHTS
+  HOTELS
+  DELIVERY
+  AMAZON
+  COSTCO
+  TARGET
+  DRUGSTORES
+  OFFICE_SUPPLIES
+  SHIPPING
+  ADVERTISING
+  PHONE_INTERNET
+  SOFTWARE_CLOUD
+  GENERAL_PURCHASE
+}
+
+model User {
+  id           String              @id @default(cuid())
+  email        String              @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  cards        UserCard[]
+  subscription Subscription?
+  logs         RecommendationLog[]
+}
+
+model CreditCard {
+  id                    String           @id @default(cuid())
+  name                  String           @unique
+  issuer                String
+  cardType              CardType         @default(personal)
+  annualFee             Decimal          @db.Decimal(10, 2)
+  rewardType            RewardType
+  baseRewardRate        Float            @default(1)
+  foreignTransactionFee Float            @default(0)
+  notes                 String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  rewardCategories      RewardCategory[]
+  benefits              CardBenefit[]
+  userCards             UserCard[]
+}
+
+model RewardCategory {
+  id        String           @id @default(cuid())
+  cardId    String
+  card      CreditCard       @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  category  PurchaseCategory
+  label     String?
+  rate      Float
+  capAmount Decimal?         @db.Decimal(10, 2)
+  capPeriod String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([category])
+}
+
+model CardBenefit {
+  id          String     @id @default(cuid())
+  cardId      String
+  card        CreditCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  annualValue Decimal?   @db.Decimal(10, 2)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model UserCard {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId    String
+  card      CreditCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  nickname  String?
+  createdAt DateTime   @default(now())
+
+  @@unique([userId, cardId])
+  @@index([userId])
+}
+
+model Subscription {
+  id                    String     @id @default(cuid())
+  userId                String     @unique
+  user                  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                  PlanStatus @default(FREE)
+  revenueCatCustomerId  String?
+  entitlementIdentifier String?
+  productIdentifier     String?
+  expiresAt             DateTime?
+  lifetime              Boolean    @default(false)
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+}
+
+model RecommendationLog {
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category      PurchaseCategory
+  bestCardId    String?
+  requestAmount Decimal?         @db.Decimal(10, 2)
+  result        Json?
+  createdAt     DateTime         @default(now())
+
+  @@index([userId, createdAt])
+}

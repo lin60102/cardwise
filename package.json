@@ -1,0 +1,29 @@
+{
+  "name": "cardwise",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CardWise MVP monorepo for credit card reward optimization.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "postinstall": "npm run build -w @cardwise/shared",
+    "dev:api": "npm run dev -w @cardwise/api",
+    "dev:mobile": "npm run start -w @cardwise/mobile",
+    "build": "npm run build -w @cardwise/shared && npm run build -w @cardwise/api && npm run typecheck -w @cardwise/mobile",
+    "test": "npm run test -w @cardwise/shared",
+    "db:generate": "npm run prisma:generate -w @cardwise/api",
+    "db:migrate": "npm run prisma:migrate -w @cardwise/api",
+    "db:seed": "npm run seed -w @cardwise/api"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "overrides": {
+    "expo-font": "~12.0.10"
+  }
+}
