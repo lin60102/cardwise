@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppButton } from "../components/AppButton";
 import { ErrorBanner } from "../components/ErrorBanner";
@@ -44,6 +44,12 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
         <Text style={styles.title}>{t("paywall.title")}</Text>
         <Text style={styles.copy}>{t("paywall.copy")}</Text>
       </View>
+
+      <Image
+        source={require("../../assets/images/cardwise-paywall-premium.png")}
+        style={styles.heroImage}
+        resizeMode="cover"
+      />
 
       <ErrorBanner message={message} />
 
@@ -98,6 +104,14 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 16,
     lineHeight: 23
+  },
+  heroImage: {
+    width: "100%",
+    aspectRatio: 1,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface
   },
   planList: {
     gap: spacing.sm

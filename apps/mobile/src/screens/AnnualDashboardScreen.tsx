@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorBanner } from "../components/ErrorBanner";
@@ -69,6 +69,11 @@ export function AnnualDashboardScreen({ navigation }: ScreenProps<"AnnualDashboa
   return (
     <Screen>
       <ErrorBanner message={error} />
+      <Image
+        source={require("../../assets/images/cardwise-dashboard-hero.png")}
+        style={styles.heroImage}
+        resizeMode="cover"
+      />
       <InfoCard>
         <Text style={styles.kicker}>{t("dashboard.title")}</Text>
         <Text style={styles.net}>${summary.netCredits.toLocaleString()}</Text>
@@ -122,6 +127,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "900",
     textTransform: "uppercase"
+  },
+  heroImage: {
+    width: "100%",
+    aspectRatio: 1,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface
   },
   net: {
     color: colors.text,

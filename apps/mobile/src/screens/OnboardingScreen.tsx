@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Screen } from "../components/Screen";
 import { AppButton } from "../components/AppButton";
@@ -29,6 +29,12 @@ export function OnboardingScreen() {
         <Text style={styles.headline}>{t("onboarding.headline")}</Text>
         <Text style={styles.copy}>{t("onboarding.copy")}</Text>
       </View>
+
+      <Image
+        source={require("../../assets/images/cardwise-onboarding-hero.png")}
+        style={styles.heroImage}
+        resizeMode="cover"
+      />
 
       <View style={styles.featureStack}>
         {features.map((feature) => (
@@ -77,6 +83,14 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 16,
     lineHeight: 24
+  },
+  heroImage: {
+    width: "100%",
+    aspectRatio: 1,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface
   },
   featureStack: {
     gap: spacing.sm,

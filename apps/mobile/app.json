@@ -6,6 +6,9 @@
     "orientation": "portrait",
     "scheme": "cardwise",
     "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "assets/images/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cardwise.app"
