@@ -17,6 +17,7 @@ import { PaywallScreen } from "./src/screens/PaywallScreen";
 import { RecommendationScreen } from "./src/screens/RecommendationScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { SpendProfileScreen } from "./src/screens/SpendProfileScreen";
+import { SupportScreen } from "./src/screens/SupportScreen";
 import { RootStackParamList } from "./src/navigation/types";
 import { LoadingState } from "./src/components/LoadingState";
 
@@ -54,6 +55,7 @@ function RootNavigator() {
             <Stack.Screen name="BonusTracker" component={BonusTrackerScreen} options={{ headerShown: false }} />
             <Stack.Screen name="CardDetail" component={CardDetailScreen} options={{ title: t("detail.title") }} />
             <Stack.Screen name="Paywall" component={PaywallScreen} options={{ title: "CardWise Premium" }} />
+            <Stack.Screen name="Support" component={SupportScreen} options={{ title: t("support.navTitle") }} />
             <Stack.Screen name="AnnualDashboard" component={AnnualDashboardScreen} options={{ title: t("wallet.annualValue") }} />
             <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
           </>

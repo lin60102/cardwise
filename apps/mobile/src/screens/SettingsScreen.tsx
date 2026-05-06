@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { AppButton } from "../components/AppButton";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InfoCard } from "../components/InfoCard";
@@ -129,6 +130,23 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
         </View>
       </InfoCard>
 
+      <InfoCard tone="warm">
+        <View style={styles.settingRow}>
+          <View style={styles.settingText}>
+            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{t("support.title")}</Text>
+            <Text style={[styles.copy, { color: themeColors.muted }]}>{t("support.settingsCopy")}</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.supportButton, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}
+            onPress={() => navigation.navigate("Support")}
+          >
+            <Feather name="heart" size={19} color={themeColors.accent} />
+            <Text style={[styles.supportButtonText, { color: themeColors.primaryDark }]}>{t("support.navTitle")}</Text>
+          </Pressable>
+        </View>
+      </InfoCard>
+
       <InfoCard>
         <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{t("settings.freeRules")}</Text>
         <Text style={[styles.copy, { color: themeColors.muted }]}>{t("settings.freeRulesCopy")}</Text>
@@ -214,6 +232,20 @@ const styles = StyleSheet.create({
   },
   themeOptionText: {
     fontSize: 14,
+    fontWeight: "900"
+  },
+  supportButton: {
+    minHeight: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: spacing.xs
+  },
+  supportButtonText: {
+    fontSize: 13,
     fontWeight: "900"
   }
 });

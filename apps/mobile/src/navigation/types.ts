@@ -10,6 +10,7 @@ export type RootStackParamList = {
   BonusTracker: undefined;
   CardDetail: { cardId: string };
   Paywall: { reason?: string } | undefined;
+  Support: undefined;
   AnnualDashboard: undefined;
   Settings: undefined;
 };

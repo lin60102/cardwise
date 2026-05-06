@@ -33,3 +33,8 @@ export async function purchasePlaceholder(plan: "monthly" | "yearly" | "lifetime
   return { success: false, message: "Connect RevenueCat offerings in a development build to enable purchases." };
 }
 
+export async function purchaseSupportPlaceholder(amount: number) {
+  console.log(`RevenueCat support placeholder selected: $${amount.toFixed(2)}`);
+  return { success: false, message: "Connect RevenueCat support products in a development build to enable one-time support." };
+}
+
