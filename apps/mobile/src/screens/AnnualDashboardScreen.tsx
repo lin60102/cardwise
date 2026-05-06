@@ -74,18 +74,18 @@ export function AnnualDashboardScreen({ navigation }: ScreenProps<"AnnualDashboa
         style={styles.heroImage}
         resizeMode="cover"
       />
-      <InfoCard>
+      <InfoCard tone="success">
         <Text style={styles.kicker}>{t("dashboard.title")}</Text>
         <Text style={styles.net}>${summary.netCredits.toLocaleString()}</Text>
         <Text style={styles.copy}>{t("dashboard.copy")}</Text>
       </InfoCard>
 
       <View style={styles.grid}>
-        <InfoCard>
+        <InfoCard style={styles.metricCard}>
           <Text style={styles.metric}>${summary.annualCredits.toLocaleString()}</Text>
           <Text style={styles.label}>{t("dashboard.credits")}</Text>
         </InfoCard>
-        <InfoCard>
+        <InfoCard tone="warm" style={styles.metricCard}>
           <Text style={styles.metric}>${summary.annualFees.toLocaleString()}</Text>
           <Text style={styles.label}>{t("dashboard.fees")}</Text>
         </InfoCard>
@@ -149,6 +149,9 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     gap: spacing.sm
+  },
+  metricCard: {
+    flex: 1
   },
   metric: {
     color: colors.text,

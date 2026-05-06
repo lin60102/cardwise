@@ -14,9 +14,11 @@ import { colors, spacing } from "../theme";
 import { useAuth } from "../context/AuthContext";
 import { useFeatureSettings } from "../context/FeatureSettingsContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useAppTheme } from "../context/ThemeContext";
 
 export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
   const { t } = useLanguage();
+  const { colors: themeColors } = useAppTheme();
   const { user } = useAuth();
   const { showBusinessCards, setShowBusinessCards } = useFeatureSettings();
   const [query, setQuery] = useState("");
@@ -96,10 +98,15 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
 
   return (
     <Screen>
-      <View style={styles.searchWrap}>
-        <Feather name="search" color={colors.muted} size={20} />
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: themeColors.text }]}>{t("add.title")}</Text>
+        <Text style={[styles.copy, { color: themeColors.muted }]}>{t("add.copy")}</Text>
+      </View>
+
+      <View style={[styles.searchWrap, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+        <Feather name="search" color={themeColors.muted} size={20} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: themeColors.text }]}
           placeholder={t("add.search")}
           placeholderTextColor={colors.muted}
           value={query}
@@ -108,14 +115,14 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
         />
       </View>
 
-      <View style={styles.segment}>
+      <View style={[styles.segment, { backgroundColor: themeColors.surfaceAlt }]}>
         {(["all", "personal", "business"] as const).map((item) => (
           <Pressable
             key={item}
-            style={[styles.segmentButton, filter === item && styles.segmentActive]}
+            style={[styles.segmentButton, filter === item && { backgroundColor: themeColors.surface }]}
             onPress={() => void selectFilter(item)}
           >
-            <Text style={[styles.segmentText, filter === item && styles.segmentTextActive]}>
+            <Text style={[styles.segmentText, { color: filter === item ? themeColors.primary : themeColors.muted }]}>
               {item === "business" && user?.plan !== "PREMIUM"
                 ? `${t(`cardType.${item}`)} Premium`
                 : item === "all"
@@ -126,12 +133,16 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
         ))}
       </View>
 
+      <View style={styles.resultHeader}>
+        <Text style={[styles.resultCount, { color: themeColors.muted }]}>{t("add.results", { count: visibleCards.length })}</Text>
+      </View>
+
       <ErrorBanner message={error} />
 
       {loading ? (
         <LoadingState label={t("add.searching")} />
       ) : visibleCards.length === 0 ? (
-        <EmptyState title={t("add.noCards.title")} message={t("add.noCards.message")} />
+        <EmptyState title={t("add.noCards.title")} message={t("add.noCards.message")} icon="search" />
       ) : (
         <View style={styles.list}>
           {visibleCards.map((card) => (
@@ -140,8 +151,12 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
               card={card}
               onPress={() => navigation.navigate("CardDetail", { cardId: card.id })}
               trailing={
-                <Pressable style={styles.addButton} onPress={() => void addCard(card.id)} disabled={addingCardId === card.id}>
-                  <Text style={styles.addText}>{addingCardId === card.id ? "..." : t("common.add")}</Text>
+                <Pressable
+                  style={[styles.addButton, { backgroundColor: themeColors.primary }]}
+                  onPress={() => void addCard(card.id)}
+                  disabled={addingCardId === card.id}
+                >
+                  <Text style={[styles.addText, { color: themeColors.surface }]}>{addingCardId === card.id ? "..." : t("common.add")}</Text>
                 </Pressable>
               }
             />
@@ -155,6 +170,20 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    gap: spacing.sm
+  },
+  title: {
+    color: colors.text,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: "900"
+  },
+  copy: {
+    color: colors.muted,
+    fontSize: 15,
+    lineHeight: 22
+  },
   searchWrap: {
     minHeight: 52,
     borderRadius: 8,
@@ -192,6 +221,17 @@ const styles = StyleSheet.create({
   },
   segmentTextActive: {
     color: colors.primary
+  },
+  resultHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  resultCount: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "900",
+    textTransform: "uppercase"
   },
   list: {
     gap: spacing.sm

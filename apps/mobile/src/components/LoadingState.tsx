@@ -1,11 +1,14 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { colors, spacing } from "../theme";
+import { useAppTheme } from "../context/ThemeContext";
+import { spacing } from "../theme";
 
 export function LoadingState({ label = "Loading" }: { label?: string }) {
+  const { colors } = useAppTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ActivityIndicator color={colors.primary} size="large" />
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
     </View>
   );
 }
@@ -15,11 +18,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.background
+    gap: spacing.sm
   },
   label: {
-    color: colors.muted,
     fontSize: 15
   }
 });

@@ -5,6 +5,7 @@ export const storageKeys = {
   authUser: "cardwise.authUser",
   hasOnboarded: "cardwise.hasOnboarded",
   language: "cardwise.language",
+  themeMode: "cardwise.themeMode",
   demoWallet: "cardwise.demoWallet",
   showBusinessCards: "cardwise.showBusinessCards",
   spendProfile: "cardwise.spendProfile",

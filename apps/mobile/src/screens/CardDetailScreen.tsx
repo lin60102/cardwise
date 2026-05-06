@@ -16,6 +16,11 @@ function formatRewardType(type: string) {
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
+function formatRate(rate: number, rewardType: CreditCardLike["rewardType"]) {
+  const value = Number.isInteger(rate) ? String(rate) : rate.toFixed(1);
+  return rewardType === "cashback" ? `${value}%` : `${value}x`;
+}
+
 export function CardDetailScreen({ route, navigation }: ScreenProps<"CardDetail">) {
   const { t, categoryLabel } = useLanguage();
   const [card, setCard] = useState<CreditCardLike | null>(null);
@@ -55,7 +60,7 @@ export function CardDetailScreen({ route, navigation }: ScreenProps<"CardDetail"
     <Screen>
       <ErrorBanner message={error} />
 
-      <InfoCard>
+      <InfoCard tone="info">
         <Text style={styles.issuer}>{card.issuer}</Text>
         <Text style={styles.name}>{card.name}</Text>
         <Text style={styles.type}>{t(`cardType.${card.cardType}`)}</Text>
@@ -65,7 +70,7 @@ export function CardDetailScreen({ route, navigation }: ScreenProps<"CardDetail"
             <Text style={styles.metricLabel}>{t("detail.annualFee")}</Text>
           </View>
           <View style={styles.metric}>
-            <Text style={styles.metricValue}>{card.baseRewardRate}x</Text>
+            <Text style={styles.metricValue}>{formatRate(card.baseRewardRate, card.rewardType)}</Text>
             <Text style={styles.metricLabel}>{t("detail.baseRate")}</Text>
           </View>
           <View style={styles.metric}>
@@ -74,7 +79,7 @@ export function CardDetailScreen({ route, navigation }: ScreenProps<"CardDetail"
           </View>
         </View>
         <Text style={styles.notes}>
-          {formatRewardType(card.rewardType)} rewards. {card.notes}
+          {formatRewardType(card.rewardType)} rewards{card.notes ? `. ${card.notes}` : "."}
         </Text>
       </InfoCard>
 
@@ -87,7 +92,7 @@ export function CardDetailScreen({ route, navigation }: ScreenProps<"CardDetail"
                 <Text style={styles.rowTitle}>{categoryLabel(reward.category)}</Text>
                 <Text style={styles.rowMeta}>{reward.label ?? t("detail.eligible")}</Text>
               </View>
-              <Text style={styles.rate}>{reward.rate}x</Text>
+              <Text style={styles.rate}>{formatRate(reward.rate, card.rewardType)}</Text>
             </View>
             {reward.capAmount ? (
               <Text style={styles.cap}>
@@ -134,7 +139,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     color: colors.primary,
     backgroundColor: colors.surfaceAlt,
-    borderRadius: 999,
+    borderRadius: 8,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     fontSize: 12,

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { getBestCardRecommendation, type PurchaseCategory } from "@cardwise/shared";
 import { AppButton } from "../components/AppButton";
+import { CategoryVisual } from "../components/CategoryVisual";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InfoCard } from "../components/InfoCard";
@@ -9,6 +11,7 @@ import { LoadingState } from "../components/LoadingState";
 import { Screen } from "../components/Screen";
 import { useFeatureSettings } from "../context/FeatureSettingsContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useAppTheme } from "../context/ThemeContext";
 import type { ScreenProps } from "../navigation/types";
 import { api, type WalletCard } from "../services/api";
 import { storage, storageKeys } from "../services/storage";
@@ -69,11 +72,12 @@ function formatProjectionReward(row: ProjectionRow) {
     pieces.push(`${Math.round(row.rewardTotals.miles).toLocaleString()} miles`);
   }
 
-  return pieces.join(" • ");
+  return pieces.join(" - ");
 }
 
 export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) {
   const { t, categoryLabel } = useLanguage();
+  const { colors: themeColors } = useAppTheme();
   const { showBusinessCards } = useFeatureSettings();
   const [profile, setProfile] = useState<SpendProfileValues>({});
   const [wallet, setWallet] = useState<WalletCard[]>([]);
@@ -199,22 +203,32 @@ export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) 
 
   return (
     <Screen>
-      <InfoCard>
-        <Text style={styles.title}>{t("spendProfile.title")}</Text>
-        <Text style={styles.copy}>{t("spendProfile.copy")}</Text>
+      <InfoCard tone="info">
+        <View style={styles.headerRow}>
+          <View style={[styles.headerIcon, { backgroundColor: themeColors.surface }]}>
+            <Feather name="pie-chart" size={22} color={themeColors.primary} />
+          </View>
+          <View style={styles.headerCopy}>
+            <Text style={[styles.title, { color: themeColors.text }]}>{t("spendProfile.title")}</Text>
+            <Text style={[styles.copy, { color: themeColors.muted }]}>{t("spendProfile.copy")}</Text>
+          </View>
+        </View>
       </InfoCard>
 
       <ErrorBanner message={error} />
 
       <View style={styles.inputList}>
         {categories.map((category) => (
-          <View style={styles.inputRow} key={category}>
+          <View style={[styles.inputRow, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]} key={category}>
+            <View style={[styles.categoryIcon, { backgroundColor: themeColors.infoSoft }]}>
+              <CategoryVisual category={category} color={themeColors.primary} size={19} />
+            </View>
             <View style={styles.inputLabelWrap}>
-              <Text style={styles.inputLabel}>{categoryLabel(category)}</Text>
-              <Text style={styles.inputHint}>{t("spendProfile.monthly")}</Text>
+              <Text style={[styles.inputLabel, { color: themeColors.text }]}>{categoryLabel(category)}</Text>
+              <Text style={[styles.inputHint, { color: themeColors.muted }]}>{t("spendProfile.monthly")}</Text>
             </View>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: themeColors.surfaceAlt, borderColor: themeColors.border, color: themeColors.text }]}
               keyboardType="decimal-pad"
               value={profile[category] ?? ""}
               onChangeText={(value) => setProfile((current) => ({ ...current, [category]: value }))}
@@ -233,27 +247,37 @@ export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) 
           message={t("wallet.noCards.message")}
           actionLabel={t("wallet.addCards")}
           onAction={() => navigation.navigate("AddCards")}
+          icon="plus-circle"
         />
       ) : projections.length === 0 ? (
-        <EmptyState title={t("spendProfile.empty.title")} message={t("spendProfile.empty.message")} />
+        <EmptyState title={t("spendProfile.empty.title")} message={t("spendProfile.empty.message")} icon="edit-3" />
       ) : (
         <>
-          <InfoCard>
-            <Text style={styles.sectionTitle}>{t("spendProfile.projected")}</Text>
-            <Text style={styles.total}>${totals.dollars.toFixed(2)}</Text>
-            <Text style={styles.copy}>
-              {Math.round(totals.points).toLocaleString()} points • {Math.round(totals.miles).toLocaleString()} miles
+          <InfoCard tone="success">
+            <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>{t("spendProfile.projected")}</Text>
+            <Text style={[styles.total, { color: themeColors.text }]}>${totals.dollars.toFixed(2)}</Text>
+            <Text style={[styles.copy, { color: themeColors.muted }]}>
+              {Math.round(totals.points).toLocaleString()} points - {Math.round(totals.miles).toLocaleString()} miles
             </Text>
           </InfoCard>
 
           <View style={styles.projectionList}>
             {projections.map((row) => (
               <InfoCard key={row.category}>
-                <Text style={styles.categoryName}>{categoryLabel(row.category)}</Text>
-                <Text style={styles.copy}>${row.annualSpend.toLocaleString()} {t("spendProfile.annualSpend")}</Text>
+                <View style={styles.projectionHeader}>
+                  <View style={[styles.categoryIcon, { backgroundColor: themeColors.infoSoft }]}>
+                    <CategoryVisual category={row.category} color={themeColors.primary} size={19} />
+                  </View>
+                  <View style={styles.headerCopy}>
+                    <Text style={[styles.categoryName, { color: themeColors.text }]}>{categoryLabel(row.category)}</Text>
+                    <Text style={[styles.copy, { color: themeColors.muted }]}>
+                      ${row.annualSpend.toLocaleString()} {t("spendProfile.annualSpend")}
+                    </Text>
+                  </View>
+                </View>
                 {row.primaryCardName ? (
-                  <Text style={styles.best}>
-                    {row.primaryCardName} • {formatProjectionReward(row)}
+                  <Text style={[styles.best, { color: themeColors.primary }]}>
+                    {row.primaryCardName} - {formatProjectionReward(row)}
                   </Text>
                 ) : null}
               </InfoCard>
@@ -266,6 +290,22 @@ export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) 
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md
+  },
+  headerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  headerCopy: {
+    flex: 1,
+    gap: 4
+  },
   title: {
     color: colors.text,
     fontSize: 22,
@@ -289,6 +329,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md
+  },
+  categoryIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center"
   },
   inputLabelWrap: {
     flex: 1,
@@ -329,6 +376,11 @@ const styles = StyleSheet.create({
     fontWeight: "900"
   },
   projectionList: {
+    gap: spacing.sm
+  },
+  projectionHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.sm
   },
   categoryName: {

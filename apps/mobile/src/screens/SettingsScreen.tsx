@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { AppButton } from "../components/AppButton";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InfoCard } from "../components/InfoCard";
@@ -9,12 +9,14 @@ import { Screen } from "../components/Screen";
 import { useAuth } from "../context/AuthContext";
 import { useFeatureSettings } from "../context/FeatureSettingsContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useAppTheme } from "../context/ThemeContext";
 import type { ScreenProps } from "../navigation/types";
-import { colors, spacing } from "../theme";
+import { colors, spacing, type ThemeMode } from "../theme";
 
 export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
   const { user, logout, refreshSubscription } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { mode, setMode, colors: themeColors } = useAppTheme();
   const { showBusinessCards, setShowBusinessCards } = useFeatureSettings();
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -41,41 +43,84 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
     await setShowBusinessCards(!showBusinessCards);
   }
 
+  async function selectTheme(nextMode: ThemeMode) {
+    await setMode(nextMode);
+  }
+
   return (
     <Screen>
+      <View style={styles.header}>
+        <Text style={[styles.screenTitle, { color: themeColors.text }]}>{t("common.settings")}</Text>
+        <Text style={[styles.copy, { color: themeColors.muted }]}>{t("settings.preferences")}</Text>
+      </View>
       <ErrorBanner message={error} />
 
       <InfoCard>
-        <Text style={styles.label}>{t("settings.signedInAs")}</Text>
-        <Text style={styles.email}>{user?.email}</Text>
+        <Text style={[styles.label, { color: themeColors.muted }]}>{t("settings.signedInAs")}</Text>
+        <Text style={[styles.email, { color: themeColors.text }]}>{user?.email}</Text>
         <PlanBadge plan={user?.plan ?? "FREE"} />
       </InfoCard>
 
       <InfoCard>
-        <Text style={styles.sectionTitle}>{t("settings.language")}</Text>
-        <Text style={styles.copy}>{t("settings.languageCopy")}</Text>
-        <LanguageToggle />
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{t("settings.preferences")}</Text>
+        <View style={styles.settingRow}>
+          <View style={styles.settingText}>
+            <Text style={[styles.optionTitle, { color: themeColors.text }]}>{t("settings.language")}</Text>
+            <Text style={[styles.copy, { color: themeColors.muted }]}>{t("settings.languageCopy")}</Text>
+            <Text style={[styles.status, { color: themeColors.primary }]}>
+              {t("settings.currentLanguage", { language: t(`language.${language}`) })}
+            </Text>
+          </View>
+          <LanguageToggle />
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.settingText}>
+          <Text style={[styles.optionTitle, { color: themeColors.text }]}>{t("settings.appearance")}</Text>
+          <Text style={[styles.copy, { color: themeColors.muted }]}>{t("settings.appearanceCopy")}</Text>
+        </View>
+        <View style={styles.themeOptions}>
+          {(["light", "dark"] as const).map((item) => {
+            const selected = mode === item;
+            return (
+              <Pressable
+                key={item}
+                style={[
+                  styles.themeOption,
+                  {
+                    backgroundColor: selected ? themeColors.primary : themeColors.surfaceAlt,
+                    borderColor: selected ? themeColors.primary : themeColors.border
+                  }
+                ]}
+                onPress={() => void selectTheme(item)}
+              >
+                <Text style={[styles.themeOptionText, { color: selected ? themeColors.surface : themeColors.primaryDark }]}>
+                  {t(`theme.${item}`)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </InfoCard>
 
       <InfoCard>
         <View style={styles.settingRow}>
           <View style={styles.settingText}>
-            <Text style={styles.sectionTitle}>{t("settings.businessCards")}</Text>
-            <Text style={styles.copy}>{t("settings.businessCardsCopy")}</Text>
-            <Text style={styles.status}>{showBusinessCards ? t("settings.enabled") : t("settings.disabled")}</Text>
+            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{t("settings.businessCards")}</Text>
+            <Text style={[styles.copy, { color: themeColors.muted }]}>{t("settings.businessCardsCopy")}</Text>
+            <Text style={[styles.status, { color: themeColors.primary }]}>{showBusinessCards ? t("settings.enabled") : t("settings.disabled")}</Text>
           </View>
           <Switch
             value={showBusinessCards}
             onValueChange={() => void toggleBusinessCards()}
-            trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor={colors.surface}
+            trackColor={{ false: themeColors.border, true: themeColors.primary }}
+            thumbColor={themeColors.surface}
           />
         </View>
       </InfoCard>
 
       <InfoCard>
-        <Text style={styles.sectionTitle}>{t("settings.subscription")}</Text>
-        <Text style={styles.copy}>{t("settings.subscriptionCopy")}</Text>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{t("settings.subscription")}</Text>
+        <Text style={[styles.copy, { color: themeColors.muted }]}>{t("settings.subscriptionCopy")}</Text>
         <View style={styles.actions}>
           <AppButton title={t("settings.refresh")} variant="secondary" onPress={refreshPlan} loading={refreshing} />
           {user?.plan === "FREE" ? (
@@ -85,8 +130,8 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
       </InfoCard>
 
       <InfoCard>
-        <Text style={styles.sectionTitle}>{t("settings.freeRules")}</Text>
-        <Text style={styles.copy}>{t("settings.freeRulesCopy")}</Text>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{t("settings.freeRules")}</Text>
+        <Text style={[styles.copy, { color: themeColors.muted }]}>{t("settings.freeRulesCopy")}</Text>
       </InfoCard>
 
       <AppButton title={t("settings.logout")} variant="danger" onPress={() => void logout()} />
@@ -95,6 +140,15 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    gap: spacing.xs
+  },
+  screenTitle: {
+    color: colors.text,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: "900"
+  },
   label: {
     color: colors.muted,
     fontSize: 13,
@@ -109,6 +163,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 18,
+    fontWeight: "900"
+  },
+  optionTitle: {
+    color: colors.text,
+    fontSize: 16,
     fontWeight: "900"
   },
   copy: {
@@ -133,6 +192,28 @@ const styles = StyleSheet.create({
   status: {
     color: colors.primary,
     fontSize: 13,
+    fontWeight: "900"
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.xs
+  },
+  themeOptions: {
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  themeOption: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm
+  },
+  themeOptionText: {
+    fontSize: 14,
     fontWeight: "900"
   }
 });

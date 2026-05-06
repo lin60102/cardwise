@@ -101,9 +101,14 @@ Set these environment variables before building:
 ```bash
 EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=
 EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=
+EXPO_PUBLIC_ADMOB_USE_TEST_ADS=true
 EXPO_PUBLIC_ADMOB_IOS_APP_ID=
 EXPO_PUBLIC_ADMOB_ANDROID_APP_ID=
+EXPO_PUBLIC_ADMOB_IOS_BANNER_AD_UNIT_ID=
+EXPO_PUBLIC_ADMOB_ANDROID_BANNER_AD_UNIT_ID=
 ```
+
+Keep `EXPO_PUBLIC_ADMOB_USE_TEST_ADS=true` while developing. Real ads require setting the native AdMob App IDs and banner ad unit IDs above, then rebuilding the native development build.
 
 ## API Endpoints
 

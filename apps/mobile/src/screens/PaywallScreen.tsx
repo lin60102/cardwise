@@ -21,7 +21,8 @@ const benefits = [
   "paywall.benefit2",
   "paywall.benefit3",
   "paywall.benefit4",
-  "paywall.benefit5"
+  "paywall.benefit5",
+  "paywall.benefit6"
 ];
 
 export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
@@ -51,6 +52,11 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
         resizeMode="cover"
       />
 
+      <InfoCard tone="warm">
+        <Text style={styles.valueTitle}>{t("paywall.valueTitle")}</Text>
+        <Text style={styles.copy}>{t("paywall.valueCopy")}</Text>
+      </InfoCard>
+
       <ErrorBanner message={message} />
 
       <View style={styles.planList}>
@@ -64,12 +70,15 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
               <Text style={styles.planName}>{t(plan.nameKey)}</Text>
               <Text style={styles.planNote}>{t(plan.noteKey)}</Text>
             </View>
-            <Text style={styles.planPrice}>{plan.price}</Text>
+            <View style={styles.planRight}>
+              <Text style={styles.planPrice}>{plan.price}</Text>
+              {selectedPlan === plan.id ? <Feather name="check-circle" size={20} color={colors.primary} /> : null}
+            </View>
           </Pressable>
         ))}
       </View>
 
-      <InfoCard>
+      <InfoCard tone="success">
         {benefits.map((benefit) => (
           <View style={styles.benefitRow} key={benefit}>
             <Feather name="check" color={colors.success} size={18} />
@@ -105,6 +114,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 23
   },
+  valueTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "900"
+  },
   heroImage: {
     width: "100%",
     aspectRatio: 1,
@@ -128,7 +142,7 @@ const styles = StyleSheet.create({
   },
   planActive: {
     borderColor: colors.primary,
-    backgroundColor: "#ECFDF3"
+    backgroundColor: "#EEF2FF"
   },
   planName: {
     color: colors.text,
@@ -144,6 +158,10 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 22,
     fontWeight: "900"
+  },
+  planRight: {
+    alignItems: "flex-end",
+    gap: spacing.xs
   },
   benefitRow: {
     flexDirection: "row",

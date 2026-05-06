@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { AppButton } from "../components/AppButton";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorBanner } from "../components/ErrorBanner";
@@ -7,6 +8,7 @@ import { InfoCard } from "../components/InfoCard";
 import { LoadingState } from "../components/LoadingState";
 import { Screen } from "../components/Screen";
 import { useLanguage } from "../context/LanguageContext";
+import { useAppTheme } from "../context/ThemeContext";
 import type { ScreenProps } from "../navigation/types";
 import { api, type WalletCard } from "../services/api";
 import { storage, storageKeys } from "../services/storage";
@@ -37,6 +39,7 @@ function getProgress(currentSpend: string, targetSpend: string) {
 
 export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) {
   const { t } = useLanguage();
+  const { colors: themeColors } = useAppTheme();
   const [wallet, setWallet] = useState<WalletCard[]>([]);
   const [trackers, setTrackers] = useState<BonusTrackerMap>({});
   const [loading, setLoading] = useState(true);
@@ -113,12 +116,19 @@ export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) 
 
   return (
     <Screen>
-      <InfoCard>
-        <Text style={styles.title}>{t("bonus.title")}</Text>
-        <Text style={styles.copy}>{t("bonus.copy")}</Text>
-        <Text style={styles.total}>
-          ${summary.currentSpend.toLocaleString()} / ${summary.targetSpend.toLocaleString()}
-        </Text>
+      <InfoCard tone="warm">
+        <View style={styles.headerRow}>
+          <View style={[styles.headerIcon, { backgroundColor: themeColors.surface }]}>
+            <Feather name="target" size={22} color={themeColors.accent} />
+          </View>
+          <View style={styles.headerCopy}>
+            <Text style={[styles.title, { color: themeColors.text }]}>{t("bonus.title")}</Text>
+            <Text style={[styles.copy, { color: themeColors.muted }]}>{t("bonus.copy")}</Text>
+            <Text style={[styles.total, { color: themeColors.primary }]}>
+              ${summary.currentSpend.toLocaleString()} / ${summary.targetSpend.toLocaleString()}
+            </Text>
+          </View>
+        </View>
       </InfoCard>
 
       <ErrorBanner message={error} />
@@ -129,6 +139,7 @@ export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) 
           message={t("wallet.noCards.message")}
           actionLabel={t("wallet.addCards")}
           onAction={() => navigation.navigate("AddCards")}
+          icon="plus-circle"
         />
       ) : (
         <View style={styles.list}>
@@ -144,17 +155,19 @@ export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) 
 
             return (
               <InfoCard key={walletCard.id}>
-                <Text style={styles.cardName}>{walletCard.card.name}</Text>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
+                <Text style={[styles.cardName, { color: themeColors.text }]}>{walletCard.card.name}</Text>
+                <View style={[styles.progressTrack, { backgroundColor: themeColors.surfaceAlt }]}>
+                  <View style={[styles.progressFill, { backgroundColor: themeColors.primary, width: `${Math.round(progress * 100)}%` }]} />
                 </View>
-                <Text style={styles.copy}>{Math.round(progress * 100)}% • ${remaining.toLocaleString()} {t("bonus.remaining")}</Text>
+                <Text style={[styles.copy, { color: themeColors.muted }]}>
+                  {Math.round(progress * 100)}% - ${remaining.toLocaleString()} {t("bonus.remaining")}
+                </Text>
 
                 <View style={styles.fieldGrid}>
                   <View style={styles.field}>
-                    <Text style={styles.label}>{t("bonus.target")}</Text>
+                    <Text style={[styles.label, { color: themeColors.muted }]}>{t("bonus.target")}</Text>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { backgroundColor: themeColors.surfaceAlt, borderColor: themeColors.border, color: themeColors.text }]}
                       keyboardType="decimal-pad"
                       value={tracker.targetSpend}
                       onChangeText={(value) => updateTracker(walletCard.card.id, "targetSpend", value)}
@@ -163,9 +176,9 @@ export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) 
                     />
                   </View>
                   <View style={styles.field}>
-                    <Text style={styles.label}>{t("bonus.current")}</Text>
+                    <Text style={[styles.label, { color: themeColors.muted }]}>{t("bonus.current")}</Text>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { backgroundColor: themeColors.surfaceAlt, borderColor: themeColors.border, color: themeColors.text }]}
                       keyboardType="decimal-pad"
                       value={tracker.currentSpend}
                       onChangeText={(value) => updateTracker(walletCard.card.id, "currentSpend", value)}
@@ -176,14 +189,14 @@ export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) 
                 </View>
 
                 <TextInput
-                  style={styles.fullInput}
+                  style={[styles.fullInput, { backgroundColor: themeColors.surfaceAlt, borderColor: themeColors.border, color: themeColors.text }]}
                   value={tracker.deadline}
                   onChangeText={(value) => updateTracker(walletCard.card.id, "deadline", value)}
                   placeholder={t("bonus.deadlinePlaceholder")}
                   placeholderTextColor={colors.muted}
                 />
                 <TextInput
-                  style={styles.fullInput}
+                  style={[styles.fullInput, { backgroundColor: themeColors.surfaceAlt, borderColor: themeColors.border, color: themeColors.text }]}
                   value={tracker.rewardLabel}
                   onChangeText={(value) => updateTracker(walletCard.card.id, "rewardLabel", value)}
                   placeholder={t("bonus.rewardPlaceholder")}
@@ -201,6 +214,22 @@ export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) 
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md
+  },
+  headerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  headerCopy: {
+    flex: 1,
+    gap: 4
+  },
   title: {
     color: colors.text,
     fontSize: 22,

@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { FeatureSettingsProvider } from "./src/context/FeatureSettingsContext";
 import { LanguageProvider, useLanguage } from "./src/context/LanguageContext";
+import { ThemeProvider, useAppTheme } from "./src/context/ThemeContext";
 import { AddCardsScreen } from "./src/screens/AddCardsScreen";
 import { AnnualDashboardScreen } from "./src/screens/AnnualDashboardScreen";
 import { BonusTrackerScreen } from "./src/screens/BonusTrackerScreen";
@@ -17,7 +18,6 @@ import { RecommendationScreen } from "./src/screens/RecommendationScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { SpendProfileScreen } from "./src/screens/SpendProfileScreen";
 import { RootStackParamList } from "./src/navigation/types";
-import { colors } from "./src/theme";
 import { LoadingState } from "./src/components/LoadingState";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -25,6 +25,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function RootNavigator() {
   const { token, hasOnboarded, isBooting } = useAuth();
   const { t } = useLanguage();
+  const { colors, mode } = useAppTheme();
 
   if (isBooting) {
     return <LoadingState label={`${t("common.loading")} CardWise`} />;
@@ -46,19 +47,19 @@ function RootNavigator() {
           <Stack.Screen name="LoginRegister" component={LoginRegisterScreen} options={{ headerShown: false }} />
         ) : (
           <>
-            <Stack.Screen name="MyWallet" component={MyWalletScreen} options={{ title: t("wallet.myWallet") }} />
+            <Stack.Screen name="MyWallet" component={MyWalletScreen} options={{ headerShown: false }} />
             <Stack.Screen name="AddCards" component={AddCardsScreen} options={{ title: t("wallet.addCards") }} />
-            <Stack.Screen name="Recommendation" component={RecommendationScreen} options={{ title: t("common.bestCard") }} />
-            <Stack.Screen name="SpendProfile" component={SpendProfileScreen} options={{ title: t("spendProfile.navTitle") }} />
-            <Stack.Screen name="BonusTracker" component={BonusTrackerScreen} options={{ title: t("bonus.navTitle") }} />
+            <Stack.Screen name="Recommendation" component={RecommendationScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="SpendProfile" component={SpendProfileScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="BonusTracker" component={BonusTrackerScreen} options={{ headerShown: false }} />
             <Stack.Screen name="CardDetail" component={CardDetailScreen} options={{ title: t("detail.title") }} />
             <Stack.Screen name="Paywall" component={PaywallScreen} options={{ title: "CardWise Premium" }} />
             <Stack.Screen name="AnnualDashboard" component={AnnualDashboardScreen} options={{ title: t("wallet.annualValue") }} />
-            <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("common.settings") }} />
+            <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
           </>
         )}
       </Stack.Navigator>
-      <StatusBar style="dark" />
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
     </NavigationContainer>
   );
 }
@@ -67,11 +68,13 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <LanguageProvider>
-        <FeatureSettingsProvider>
-          <AuthProvider>
-            <RootNavigator />
-          </AuthProvider>
-        </FeatureSettingsProvider>
+        <ThemeProvider>
+          <FeatureSettingsProvider>
+            <AuthProvider>
+              <RootNavigator />
+            </AuthProvider>
+          </FeatureSettingsProvider>
+        </ThemeProvider>
       </LanguageProvider>
     </SafeAreaProvider>
   );

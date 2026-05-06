@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { colors, spacing } from "../theme";
+import { useAppTheme } from "../context/ThemeContext";
+import { spacing } from "../theme";
 
 interface AppButtonProps {
   title: string;
@@ -12,6 +13,15 @@ interface AppButtonProps {
 }
 
 export function AppButton({ title, onPress, variant = "primary", loading, disabled, icon }: AppButtonProps) {
+  const { colors } = useAppTheme();
+  const variantStyle = {
+    primary: { backgroundColor: colors.primary },
+    secondary: { backgroundColor: colors.surfaceAlt, borderColor: colors.border, borderWidth: 1 },
+    ghost: { backgroundColor: "transparent" },
+    danger: { backgroundColor: colors.danger }
+  }[variant];
+  const textStyle = variant === "primary" || variant === "danger" ? { color: colors.surface } : { color: colors.primaryDark };
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -19,16 +29,14 @@ export function AppButton({ title, onPress, variant = "primary", loading, disabl
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        styles[variant],
+        variantStyle,
         (disabled || loading) && styles.disabled,
         pressed && styles.pressed
       ]}
     >
       {loading ? <ActivityIndicator color={variant === "primary" ? colors.surface : colors.primary} /> : null}
       {!loading && icon ? <View style={styles.icon}>{icon}</View> : null}
-      <Text style={[styles.title, variant === "primary" || variant === "danger" ? styles.lightText : styles.darkText]}>
-        {title}
-      </Text>
+      <Text style={[styles.title, textStyle]}>{title}</Text>
     </Pressable>
   );
 }
@@ -43,20 +51,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm
   },
-  primary: {
-    backgroundColor: colors.primary
-  },
-  secondary: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border
-  },
-  ghost: {
-    backgroundColor: "transparent"
-  },
-  danger: {
-    backgroundColor: colors.danger
-  },
   disabled: {
     opacity: 0.55
   },
@@ -65,13 +59,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: "700"
-  },
-  lightText: {
-    color: colors.surface
-  },
-  darkText: {
-    color: colors.primary
+    fontWeight: "800",
+    textAlign: "center",
+    flexShrink: 1
   },
   icon: {
     width: 20,

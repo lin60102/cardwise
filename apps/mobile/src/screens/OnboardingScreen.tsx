@@ -6,6 +6,7 @@ import { InfoCard } from "../components/InfoCard";
 import { LanguageToggle } from "../components/LanguageToggle";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useAppTheme } from "../context/ThemeContext";
 import { colors, spacing } from "../theme";
 
 const features = [
@@ -17,22 +18,23 @@ const features = [
 export function OnboardingScreen() {
   const { completeOnboarding } = useAuth();
   const { t } = useLanguage();
+  const { colors: themeColors } = useAppTheme();
 
   return (
     <Screen>
       <LanguageToggle />
       <View style={styles.hero}>
-        <View style={styles.mark}>
-          <Feather name="credit-card" color={colors.surface} size={34} />
+        <View style={[styles.mark, { backgroundColor: themeColors.primary }]}>
+          <Feather name="credit-card" color={themeColors.surface} size={34} />
         </View>
-        <Text style={styles.brand}>{t("onboarding.brand")}</Text>
-        <Text style={styles.headline}>{t("onboarding.headline")}</Text>
-        <Text style={styles.copy}>{t("onboarding.copy")}</Text>
+        <Text style={[styles.brand, { color: themeColors.primary }]}>{t("onboarding.brand")}</Text>
+        <Text style={[styles.headline, { color: themeColors.text }]}>{t("onboarding.headline")}</Text>
+        <Text style={[styles.copy, { color: themeColors.muted }]}>{t("onboarding.copy")}</Text>
       </View>
 
       <Image
-        source={require("../../assets/images/cardwise-onboarding-hero.png")}
-        style={styles.heroImage}
+        source={require("../../assets/images/cardwise-2026-hero.png")}
+        style={[styles.heroImage, { borderColor: themeColors.border, backgroundColor: themeColors.surface }]}
         resizeMode="cover"
       />
 
@@ -40,10 +42,10 @@ export function OnboardingScreen() {
         {features.map((feature) => (
           <InfoCard key={feature.titleKey}>
             <View style={styles.featureRow}>
-              <Feather name={feature.icon} color={colors.primary} size={22} />
+              <Feather name={feature.icon} color={themeColors.primary} size={22} />
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>{t(feature.titleKey)}</Text>
-                <Text style={styles.featureCopy}>{t(feature.copyKey)}</Text>
+                <Text style={[styles.featureTitle, { color: themeColors.text }]}>{t(feature.titleKey)}</Text>
+                <Text style={[styles.featureCopy, { color: themeColors.muted }]}>{t(feature.copyKey)}</Text>
               </View>
             </View>
           </InfoCard>
