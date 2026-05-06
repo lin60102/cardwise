@@ -104,6 +104,8 @@ export function MyWalletScreen({ navigation }: ScreenProps<"MyWallet">) {
               : navigation.navigate("Paywall", { reason: t("wallet.premiumRequired") })
           }
         />
+        <AppButton title={t("spendProfile.navTitle")} variant="secondary" onPress={() => navigation.navigate("SpendProfile")} />
+        <AppButton title={t("bonus.navTitle")} variant="secondary" onPress={() => navigation.navigate("BonusTracker")} />
       </View>
 
       {wallet.length === 0 ? (

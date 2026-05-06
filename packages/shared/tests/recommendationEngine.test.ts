@@ -54,6 +54,8 @@ describe("getBestCardRecommendation", () => {
 
     expect(result.bestCard?.card.name).toBe("Chase Sapphire Preferred");
     expect(result.bestCard?.effectiveRewardRate).toBe(5);
+    expect(result.bestCard?.estimatedRewardAmount).toBe(500);
+    expect(result.bestCard?.estimatedRewardUnit).toBe("points");
     expect(result.explanation).toContain("Use Chase Sapphire Preferred");
   });
 
@@ -65,6 +67,8 @@ describe("getBestCardRecommendation", () => {
 
     expect(result.bestCard?.card.name).toBe("Chase Freedom Unlimited");
     expect(result.bestCard?.effectiveRewardRate).toBe(1.5);
+    expect(result.bestCard?.estimatedRewardAmount).toBe(1.5);
+    expect(result.bestCard?.estimatedRewardUnit).toBe("dollars");
   });
 
   it("uses base rate when the spending cap has already been reached", () => {
@@ -102,6 +106,7 @@ describe("getBestCardRecommendation", () => {
     });
 
     expect(result.bestCard).toBeNull();
+    expect(result.purchaseAmount).toBe(100);
     expect(result.explanation).toContain("Add cards");
   });
 });

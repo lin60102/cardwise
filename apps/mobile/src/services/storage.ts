@@ -6,7 +6,9 @@ export const storageKeys = {
   hasOnboarded: "cardwise.hasOnboarded",
   language: "cardwise.language",
   demoWallet: "cardwise.demoWallet",
-  showBusinessCards: "cardwise.showBusinessCards"
+  showBusinessCards: "cardwise.showBusinessCards",
+  spendProfile: "cardwise.spendProfile",
+  bonusTrackers: "cardwise.bonusTrackers"
 };
 
 export const storage = AsyncStorage;

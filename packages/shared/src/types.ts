@@ -47,12 +47,15 @@ export interface RankedCardRecommendation {
   matchedCategory?: RewardCategoryLike;
   effectiveRewardRate: number;
   displayedRate: number;
+  estimatedRewardAmount: number;
+  estimatedRewardUnit: "dollars" | "points" | "miles";
   capApplied: boolean;
   explanation: string;
 }
 
 export interface RecommendationResult {
   category: PurchaseCategory;
+  purchaseAmount: number;
   bestCard: RankedCardRecommendation | null;
   rankedCards: RankedCardRecommendation[];
   explanation: string;

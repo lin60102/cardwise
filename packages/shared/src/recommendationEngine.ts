@@ -20,6 +20,22 @@ function trimRate(rate: number): string {
   return Number.isInteger(rate) ? String(rate) : rate.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
 
+function calculateEstimatedRewardAmount(card: CreditCardLike, effectiveRewardRate: number, purchaseAmount: number): number {
+  if (card.rewardType === "cashback") {
+    return (purchaseAmount * effectiveRewardRate) / 100;
+  }
+
+  return purchaseAmount * effectiveRewardRate;
+}
+
+function getEstimatedRewardUnit(card: CreditCardLike): RankedCardRecommendation["estimatedRewardUnit"] {
+  if (card.rewardType === "cashback") {
+    return "dollars";
+  }
+
+  return card.rewardType;
+}
+
 function findCategoryMatch(card: CreditCardLike, category: string): RewardCategoryLike | undefined {
   return card.rewardCategories.find((rewardCategory) => rewardCategory.category === category);
 }
@@ -110,6 +126,8 @@ export function getBestCardRecommendation(input: RecommendationInput): Recommend
         matchedCategory,
         effectiveRewardRate: rateResult.effectiveRewardRate,
         displayedRate: rateResult.displayedRate,
+        estimatedRewardAmount: calculateEstimatedRewardAmount(card, rateResult.effectiveRewardRate, purchaseAmount),
+        estimatedRewardUnit: getEstimatedRewardUnit(card),
         capApplied: rateResult.capApplied,
         explanation: buildCardExplanation(
           card,
@@ -133,6 +151,7 @@ export function getBestCardRecommendation(input: RecommendationInput): Recommend
   if (!bestCard) {
     return {
       category: input.category,
+      purchaseAmount,
       bestCard: null,
       rankedCards: [],
       explanation: "Add cards to your wallet to get a recommendation."
@@ -147,9 +166,9 @@ export function getBestCardRecommendation(input: RecommendationInput): Recommend
 
   return {
     category: input.category,
+    purchaseAmount,
     bestCard,
     rankedCards,
     explanation: `Use ${bestCard.card.name} for ${categoryText} because it earns ${rewardText} on ${sourceText}, which is higher than your other cards for this category.`
   };
 }
-

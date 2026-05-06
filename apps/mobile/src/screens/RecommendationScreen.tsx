@@ -9,6 +9,7 @@ import { Screen } from "../components/Screen";
 import { useLanguage } from "../context/LanguageContext";
 import { api } from "../services/api";
 import { colors, spacing } from "../theme";
+import { formatEstimatedReward } from "../utils/rewardFormatting";
 
 function formatRate(rate: number, rewardType?: string) {
   const value = Number.isInteger(rate) ? String(rate) : rate.toFixed(2);
@@ -79,6 +80,7 @@ export function RecommendationScreen() {
             <Text style={styles.bestRate}>
               {formatRate(result.bestCard.effectiveRewardRate, result.bestCard.card.rewardType)} {t("recommend.estimated")}
             </Text>
+            <Text style={styles.rewardAmount}>{formatEstimatedReward(result.bestCard)} {t("recommend.onPurchase")}</Text>
             <Text style={styles.explanation}>{result.explanation}</Text>
           </InfoCard>
 
@@ -92,6 +94,8 @@ export function RecommendationScreen() {
                     <Text style={styles.rankName}>{rankedCard.card.name}</Text>
                     <Text style={styles.rankMeta}>
                       {formatRate(rankedCard.effectiveRewardRate, rankedCard.card.rewardType)}
+                      {" • "}
+                      {formatEstimatedReward(rankedCard)}
                       {rankedCard.capApplied ? ` ${t("recommend.afterCap")}` : ""}
                     </Text>
                   </View>
@@ -170,6 +174,11 @@ const styles = StyleSheet.create({
   bestRate: {
     color: colors.accent,
     fontSize: 18,
+    fontWeight: "900"
+  },
+  rewardAmount: {
+    color: colors.primary,
+    fontSize: 16,
     fontWeight: "900"
   },
   explanation: {

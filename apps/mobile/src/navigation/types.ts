@@ -6,6 +6,8 @@ export type RootStackParamList = {
   MyWallet: undefined;
   AddCards: undefined;
   Recommendation: undefined;
+  SpendProfile: undefined;
+  BonusTracker: undefined;
   CardDetail: { cardId: string };
   Paywall: { reason?: string } | undefined;
   AnnualDashboard: undefined;
@@ -13,4 +15,3 @@ export type RootStackParamList = {
 };
 
 export type ScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<RootStackParamList, T>;
-

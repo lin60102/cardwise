@@ -7,6 +7,7 @@ import { FeatureSettingsProvider } from "./src/context/FeatureSettingsContext";
 import { LanguageProvider, useLanguage } from "./src/context/LanguageContext";
 import { AddCardsScreen } from "./src/screens/AddCardsScreen";
 import { AnnualDashboardScreen } from "./src/screens/AnnualDashboardScreen";
+import { BonusTrackerScreen } from "./src/screens/BonusTrackerScreen";
 import { CardDetailScreen } from "./src/screens/CardDetailScreen";
 import { LoginRegisterScreen } from "./src/screens/LoginRegisterScreen";
 import { MyWalletScreen } from "./src/screens/MyWalletScreen";
@@ -14,6 +15,7 @@ import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { PaywallScreen } from "./src/screens/PaywallScreen";
 import { RecommendationScreen } from "./src/screens/RecommendationScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
+import { SpendProfileScreen } from "./src/screens/SpendProfileScreen";
 import { RootStackParamList } from "./src/navigation/types";
 import { colors } from "./src/theme";
 import { LoadingState } from "./src/components/LoadingState";
@@ -47,6 +49,8 @@ function RootNavigator() {
             <Stack.Screen name="MyWallet" component={MyWalletScreen} options={{ title: t("wallet.myWallet") }} />
             <Stack.Screen name="AddCards" component={AddCardsScreen} options={{ title: t("wallet.addCards") }} />
             <Stack.Screen name="Recommendation" component={RecommendationScreen} options={{ title: t("common.bestCard") }} />
+            <Stack.Screen name="SpendProfile" component={SpendProfileScreen} options={{ title: t("spendProfile.navTitle") }} />
+            <Stack.Screen name="BonusTracker" component={BonusTrackerScreen} options={{ title: t("bonus.navTitle") }} />
             <Stack.Screen name="CardDetail" component={CardDetailScreen} options={{ title: t("detail.title") }} />
             <Stack.Screen name="Paywall" component={PaywallScreen} options={{ title: "CardWise Premium" }} />
             <Stack.Screen name="AnnualDashboard" component={AnnualDashboardScreen} options={{ title: t("wallet.annualValue") }} />
