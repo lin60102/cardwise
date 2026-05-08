@@ -6,7 +6,13 @@ import {
   type PurchaseCategory,
   type RecommendationResult
 } from "@cardwise/shared";
-import { DEMO_CARDS } from "./demoData";
+import {
+  getCachedCard,
+  getCachedCardsByIds,
+  listCachedCards,
+  searchCachedCards,
+  upsertCardsToLocalCache
+} from "./localCardCache";
 import { storage, storageKeys } from "./storage";
 
 const configuredUrl =
@@ -79,14 +85,13 @@ async function writeDemoWalletIds(cardIds: string[]) {
 
 async function getDemoWalletCards(): Promise<WalletCard[]> {
   const walletIds = await readDemoWalletIds();
-  return walletIds
-    .map((cardId) => DEMO_CARDS.find((card) => card.id === cardId))
-    .filter((card): card is CreditCardLike => Boolean(card))
-    .map((card) => ({
-      id: card.id,
-      addedAt: new Date().toISOString(),
-      card
-    }));
+  const cards = await getCachedCardsByIds(walletIds);
+
+  return cards.map((card) => ({
+    id: card.id,
+    addedAt: new Date().toISOString(),
+    card
+  }));
 }
 
 export interface AuthUser {
@@ -120,28 +125,33 @@ export const api = {
     }),
   listCards: async () => {
     if (await isDemoSession()) {
-      return { cards: DEMO_CARDS };
+      return { cards: await listCachedCards() };
     }
 
-    return request<{ cards: CreditCardLike[] }>("/cards");
+    try {
+      const response = await request<{ cards: CreditCardLike[] }>("/cards");
+      await upsertCardsToLocalCache(response.cards);
+      return response;
+    } catch (error) {
+      return { cards: await listCachedCards() };
+    }
   },
   searchCards: async (query: string) => {
     if (await isDemoSession()) {
-      const normalizedQuery = query.toLowerCase();
-      return {
-        cards: DEMO_CARDS.filter(
-          (card) =>
-            card.name.toLowerCase().includes(normalizedQuery) ||
-            card.issuer.toLowerCase().includes(normalizedQuery)
-        )
-      };
+      return { cards: await searchCachedCards(query) };
     }
 
-    return request<{ cards: CreditCardLike[] }>(`/cards/search?q=${encodeURIComponent(query)}`);
+    try {
+      const response = await request<{ cards: CreditCardLike[] }>(`/cards/search?q=${encodeURIComponent(query)}`);
+      await upsertCardsToLocalCache(response.cards);
+      return response;
+    } catch (error) {
+      return { cards: await searchCachedCards(query) };
+    }
   },
   getCard: async (cardId: string) => {
     if (await isDemoSession()) {
-      const card = DEMO_CARDS.find((demoCard) => demoCard.id === cardId);
+      const card = await getCachedCard(cardId);
       if (!card) {
         throw new ApiError("Credit card not found.", 404, "CARD_NOT_FOUND");
       }
@@ -149,7 +159,18 @@ export const api = {
       return { card };
     }
 
-    return request<{ card: CreditCardLike }>(`/cards/${cardId}`);
+    try {
+      const response = await request<{ card: CreditCardLike }>(`/cards/${cardId}`);
+      await upsertCardsToLocalCache([response.card]);
+      return response;
+    } catch (error) {
+      const cachedCard = await getCachedCard(cardId);
+      if (cachedCard) {
+        return { card: cachedCard };
+      }
+
+      throw error;
+    }
   },
   listWallet: async () => {
     if (await isDemoSession()) {
@@ -161,7 +182,7 @@ export const api = {
   addWalletCard: async (cardId: string) => {
     if (await isDemoSession()) {
       const walletIds = await readDemoWalletIds();
-      const card = DEMO_CARDS.find((demoCard) => demoCard.id === cardId);
+      const card = await getCachedCard(cardId);
 
       if (!card) {
         throw new ApiError("Credit card not found.", 404, "CARD_NOT_FOUND");

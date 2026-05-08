@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useAppTheme } from "../context/ThemeContext";
 import { getBannerAdUnitId, initializeAds, isNativeAdRuntime } from "../services/ads";
@@ -6,7 +6,18 @@ import { spacing } from "../theme";
 import { AdPlaceholder } from "./AdPlaceholder";
 
 type GoogleAdsModule = typeof import("react-native-google-mobile-ads");
-type BannerModule = Pick<GoogleAdsModule, "BannerAd" | "BannerAdSize">;
+type BannerAdComponentProps = {
+  unitId: string;
+  size: string;
+  requestOptions?: {
+    requestNonPersonalizedAdsOnly?: boolean;
+  };
+  onAdFailedToLoad?: (error: Error) => void;
+};
+type BannerModule = {
+  BannerAd: ComponentType<BannerAdComponentProps>;
+  BannerAdSize: GoogleAdsModule["BannerAdSize"];
+};
 
 export function AdBanner() {
   const { colors } = useAppTheme();
@@ -34,7 +45,7 @@ export function AdBanner() {
       .then((mobileAds) => {
         if (isMounted && mobileAds) {
           setBannerModule({
-            BannerAd: mobileAds.BannerAd,
+            BannerAd: mobileAds.BannerAd as unknown as ComponentType<BannerAdComponentProps>,
             BannerAdSize: mobileAds.BannerAdSize
           });
         }
@@ -63,7 +74,7 @@ export function AdBanner() {
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{ requestNonPersonalizedAdsOnly: true }}
-        onAdFailedToLoad={(error) => {
+        onAdFailedToLoad={(error: Error) => {
           console.warn("AdMob banner failed to load.", error);
           setLoadFailed(true);
         }}

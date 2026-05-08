@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { api, DEMO_TOKEN, type AuthUser } from "../services/api";
+import { ensureLocalCardCacheSeeded } from "../services/localCardCache";
 import { configureRevenueCat } from "../services/revenueCat";
 import { storage, storageKeys } from "../services/storage";
 
@@ -27,6 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function bootstrap() {
       try {
+        await ensureLocalCardCacheSeeded();
+
         const [storedToken, storedUser, storedOnboarded] = await Promise.all([
           storage.getItem(storageKeys.authToken),
           storage.getItem(storageKeys.authUser),

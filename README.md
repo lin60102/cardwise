@@ -31,9 +31,10 @@ cardwise/
 
 ## Stack
 
-- React Native with Expo and TypeScript
+- React Native with Expo SDK 55 and TypeScript
 - Node.js, Express, and TypeScript
 - PostgreSQL with Prisma ORM
+- Expo SQLite for the on-device credit card catalog cache
 - RevenueCat placeholder via `react-native-purchases`
 - AdMob placeholder via `react-native-google-mobile-ads`
 - Vitest tests for recommendation logic
@@ -149,6 +150,15 @@ Premium users:
 - Custom categories, annual rewards dashboard, and personalized card suggestions
 
 The backend enforces the 5-card free limit and Premium-only business cards in `apps/api/src/services/walletService.ts`.
+
+## Local Card Cache
+
+The mobile app seeds a local SQLite database on startup through `apps/mobile/src/services/localCardCache.ts`.
+
+- Demo mode reads the card catalog from the on-device cache.
+- API card list, search, and detail responses are written back to SQLite.
+- If the backend or Supabase/PostgreSQL is unavailable, card browsing falls back to the local catalog.
+- User accounts, subscriptions, and cross-device wallet sync still require the backend.
 
 ## Recommendation Logic
 
