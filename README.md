@@ -31,7 +31,7 @@ cardwise/
 
 ## Stack
 
-- React Native with Expo SDK 55 and TypeScript
+- React Native with Expo SDK 54 and TypeScript
 - Node.js, Express, and TypeScript
 - PostgreSQL with Prisma ORM
 - Expo SQLite for the on-device credit card catalog cache
