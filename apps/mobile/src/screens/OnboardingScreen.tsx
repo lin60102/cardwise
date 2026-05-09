@@ -33,9 +33,9 @@ export function OnboardingScreen() {
       </View>
 
       <Image
-        source={require("../../assets/images/cardwise-2026-hero.png")}
+        source={require("../../assets/images/cardwise-onboarding-hero.png")}
         style={[styles.heroImage, { borderColor: themeColors.border, backgroundColor: themeColors.surface }]}
-        resizeMode="cover"
+        resizeMode="contain"
       />
 
       <View style={styles.featureStack}>
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: "100%",
-    aspectRatio: 1,
+    height: 220,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,

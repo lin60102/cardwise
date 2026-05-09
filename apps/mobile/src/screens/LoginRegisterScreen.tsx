@@ -65,9 +65,9 @@ export function LoginRegisterScreen() {
             <Text style={[styles.subtitle, { color: themeColors.muted }]}>{t("auth.subtitle")}</Text>
           </View>
           <Image
-            source={require("../../assets/images/cardwise-2026-hero.png")}
+            source={require("../../assets/images/cardwise-onboarding-hero.png")}
             style={[styles.heroImage, { borderColor: themeColors.border, backgroundColor: themeColors.surfaceAlt }]}
-            resizeMode="cover"
+            resizeMode="contain"
           />
         </View>
 
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: "100%",
-    aspectRatio: 2.1,
+    height: 190,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,

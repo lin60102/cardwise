@@ -49,7 +49,7 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
       <Image
         source={require("../../assets/images/cardwise-paywall-premium.png")}
         style={styles.heroImage}
-        resizeMode="cover"
+        resizeMode="contain"
       />
 
       <InfoCard tone="warm">
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: "100%",
-    aspectRatio: 1,
+    height: 220,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,

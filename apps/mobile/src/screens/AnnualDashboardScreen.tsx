@@ -72,7 +72,7 @@ export function AnnualDashboardScreen({ navigation }: ScreenProps<"AnnualDashboa
       <Image
         source={require("../../assets/images/cardwise-dashboard-hero.png")}
         style={styles.heroImage}
-        resizeMode="cover"
+        resizeMode="contain"
       />
       <InfoCard tone="success">
         <Text style={styles.kicker}>{t("dashboard.title")}</Text>
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: "100%",
-    aspectRatio: 1,
+    height: 210,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
