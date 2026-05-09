@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import type { PurchaseCategory } from "@cardwise/shared";
-import { categoryLabels, type Language, translations } from "../i18n/translations";
+import { categoryLabels, type Language, supportedLanguages, translations } from "../i18n/translations";
 import { storage, storageKeys } from "../services/storage";
 
 interface LanguageContextValue {
@@ -30,8 +30,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function restoreLanguage() {
       const storedLanguage = await storage.getItem(storageKeys.language);
-      if (storedLanguage === "en" || storedLanguage === "zh") {
-        setLanguageState(storedLanguage);
+      const matchedLanguage = supportedLanguages.find((item) => item.code === storedLanguage);
+      if (matchedLanguage) {
+        setLanguageState(matchedLanguage.code);
       }
     }
 
@@ -46,7 +47,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         await storage.setItem(storageKeys.language, nextLanguage);
       },
       toggleLanguage: async () => {
-        const nextLanguage = language === "en" ? "zh" : "en";
+        const currentIndex = supportedLanguages.findIndex((item) => item.code === language);
+        const nextLanguage = supportedLanguages[(currentIndex + 1) % supportedLanguages.length].code;
         setLanguageState(nextLanguage);
         await storage.setItem(storageKeys.language, nextLanguage);
       },
@@ -71,4 +73,3 @@ export function useLanguage() {
 
   return context;
 }
-
