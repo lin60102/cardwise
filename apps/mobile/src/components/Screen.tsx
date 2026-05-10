@@ -20,7 +20,7 @@ export function Screen({ children, scroll = true }: ScreenProps) {
 
   if (!scroll) {
     return (
-      <SafeAreaView style={safeStyle} edges={["bottom"]}>
+      <SafeAreaView style={safeStyle} edges={["top", "bottom"]}>
         <View style={styles.shell}>
           <View style={contentStyle}>{children}</View>
           {showMainTabs ? <MainTabBar /> : null}
@@ -30,7 +30,7 @@ export function Screen({ children, scroll = true }: ScreenProps) {
   }
 
   return (
-    <SafeAreaView style={safeStyle} edges={["bottom"]}>
+    <SafeAreaView style={safeStyle} edges={["top", "bottom"]}>
       <View style={styles.shell}>
         <ScrollView contentContainerStyle={contentStyle} keyboardShouldPersistTaps="handled">
           {children}
