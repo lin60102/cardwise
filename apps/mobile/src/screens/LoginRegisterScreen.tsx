@@ -8,6 +8,7 @@ import { LanguageToggle } from "../components/LanguageToggle";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
+import { getAuthErrorMessageKey } from "../services/authErrorMessage";
 import { colors, spacing } from "../theme";
 
 export function LoginRegisterScreen() {
@@ -32,7 +33,7 @@ export function LoginRegisterScreen() {
         await auth.register(email.trim(), password, name.trim() || undefined);
       }
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unable to continue.");
+      setError(t(getAuthErrorMessageKey(submitError, mode)));
     } finally {
       setLoading(false);
     }
@@ -45,7 +46,7 @@ export function LoginRegisterScreen() {
     try {
       await auth.continueAsDemo();
     } catch (demoError) {
-      setError(demoError instanceof Error ? demoError.message : "Unable to start demo mode.");
+      setError(t(getAuthErrorMessageKey(demoError, "demo")));
     } finally {
       setLoading(false);
     }
