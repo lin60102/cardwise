@@ -238,17 +238,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs
   },
-  categoryChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary
-  },
   categoryText: {
     color: colors.text,
     fontSize: 14,
     fontWeight: "800"
-  },
-  categoryTextActive: {
-    color: colors.surface
   },
   amountToggle: {
     minHeight: 64,

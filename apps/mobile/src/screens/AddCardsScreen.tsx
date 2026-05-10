@@ -212,15 +212,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     alignItems: "center"
   },
-  segmentActive: {
-    backgroundColor: colors.surface
-  },
   segmentText: {
     color: colors.muted,
     fontWeight: "800"
-  },
-  segmentTextActive: {
-    color: colors.primary
   },
   resultHeader: {
     flexDirection: "row",

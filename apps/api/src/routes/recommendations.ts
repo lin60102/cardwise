@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { getBestCardRecommendation, PURCHASE_CATEGORIES } from "@cardwise/shared";
 import { prisma } from "../db.js";
 import { toApiCard } from "../mappers/cardMapper.js";

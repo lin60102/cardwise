@@ -17,6 +17,8 @@ Run commands from the repository root unless noted.
 
 - Install: `npm install`
 - Build all: `npm run build`
+- Lint all: `npm run lint`
+- Lint and fix: `npm run lint:fix`
 - Test default suite: `npm run test`
 - Test shared package: `npm run test -w @cardwise/shared`
 - Test mobile package: `npm run test -w @cardwise/mobile`
@@ -29,7 +31,7 @@ Run commands from the repository root unless noted.
 - Prisma migrate: `npm run db:migrate`
 - Seed database: `npm run db:seed`
 
-There is currently no lint script. Do not claim lint was run unless a lint command is added.
+Lint uses the shared root `eslint.config.mjs` for API, mobile, and shared packages.
 
 ## Development Workflow
 

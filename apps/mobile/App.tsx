@@ -18,7 +18,7 @@ import { RecommendationScreen } from "./src/screens/RecommendationScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { SpendProfileScreen } from "./src/screens/SpendProfileScreen";
 import { SupportScreen } from "./src/screens/SupportScreen";
-import { RootStackParamList } from "./src/navigation/types";
+import type { RootStackParamList } from "./src/navigation/types";
 import { LoadingState } from "./src/components/LoadingState";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

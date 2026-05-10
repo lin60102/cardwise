@@ -182,14 +182,6 @@ const styles = StyleSheet.create({
     lineHeight: 34,
     fontWeight: "900"
   },
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.surface
-  },
   heroHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

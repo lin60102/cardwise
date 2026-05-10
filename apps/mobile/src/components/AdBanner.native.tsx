@@ -5,7 +5,6 @@ import { canUseNativeAds, getBannerAdUnitId, initializeAds } from "../services/a
 import { spacing } from "../theme";
 import { AdPlaceholder } from "./AdPlaceholder";
 
-type GoogleAdsModule = typeof import("react-native-google-mobile-ads");
 type BannerAdComponentProps = {
   unitId: string;
   size: string;
@@ -14,9 +13,12 @@ type BannerAdComponentProps = {
   };
   onAdFailedToLoad?: (error: Error) => void;
 };
+type BannerAdSizeModule = {
+  ANCHORED_ADAPTIVE_BANNER: string;
+};
 type BannerModule = {
   BannerAd: ComponentType<BannerAdComponentProps>;
-  BannerAdSize: GoogleAdsModule["BannerAdSize"];
+  BannerAdSize: BannerAdSizeModule;
 };
 
 export function AdBanner() {

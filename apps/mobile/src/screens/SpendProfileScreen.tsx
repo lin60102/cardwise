@@ -85,9 +85,10 @@ export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const categories = showBusinessCards
-    ? [...PERSONAL_PROFILE_CATEGORIES, ...BUSINESS_PROFILE_CATEGORIES]
-    : PERSONAL_PROFILE_CATEGORIES;
+  const categories = useMemo(
+    () => (showBusinessCards ? [...PERSONAL_PROFILE_CATEGORIES, ...BUSINESS_PROFILE_CATEGORIES] : PERSONAL_PROFILE_CATEGORIES),
+    [showBusinessCards]
+  );
 
   useEffect(() => {
     async function load() {
