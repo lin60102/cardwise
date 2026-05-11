@@ -13,6 +13,7 @@ import {
   searchCachedCards,
   upsertCardsToLocalCache
 } from "./localCardCache";
+import { getApiAuthToken } from "./authTokenState";
 import { storage, storageKeys } from "./storage";
 
 const configuredUrl =
@@ -39,7 +40,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = await storage.getItem(storageKeys.authToken);
+  const token = await getApiAuthToken(() => storage.getItem(storageKeys.authToken));
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
 
@@ -71,7 +72,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 async function isDemoSession() {
-  return (await storage.getItem(storageKeys.authToken)) === DEMO_TOKEN;
+  return (await getApiAuthToken(() => storage.getItem(storageKeys.authToken))) === DEMO_TOKEN;
 }
 
 async function readDemoWalletIds() {
@@ -106,6 +107,13 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export interface AppleSignInPayload {
+  identityToken: string;
+  nonce: string;
+  user: string;
+  name?: string;
+}
+
 export interface WalletCard {
   id: string;
   addedAt: string;
@@ -120,6 +128,11 @@ export const api = {
     }),
   login: (payload: { email: string; password: string }) =>
     request<AuthResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
+  signInWithApple: (payload: AppleSignInPayload) =>
+    request<AuthResponse>("/auth/apple", {
       method: "POST",
       body: JSON.stringify(payload)
     }),

@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { api, DEMO_TOKEN, type AuthUser } from "../services/api";
+import { api, DEMO_TOKEN, type AppleSignInPayload, type AuthUser } from "../services/api";
+import { setApiAuthToken } from "../services/authTokenState";
 import { ensureLocalCardCacheSeeded } from "../services/localCardCache";
 import { configureRevenueCat } from "../services/revenueCat";
 import { storage, storageKeys } from "../services/storage";
@@ -11,6 +12,7 @@ interface AuthContextValue {
   isBooting: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
+  loginWithApple: (payload: AppleSignInPayload) => Promise<void>;
   continueAsDemo: () => Promise<void>;
   logout: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
@@ -36,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           storage.getItem(storageKeys.hasOnboarded)
         ]);
 
+        setApiAuthToken(storedToken);
         setToken(storedToken);
         setUser(storedUser ? (JSON.parse(storedUser) as AuthUser) : null);
         setHasOnboarded(storedOnboarded === "true");
@@ -55,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function persistSession(nextToken: string, nextUser: AuthUser) {
+    setApiAuthToken(nextToken);
     setToken(nextToken);
     setUser(nextUser);
     await Promise.all([
@@ -78,6 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await api.register({ email, password, name });
         await persistSession(response.token, response.user);
       },
+      loginWithApple: async (payload) => {
+        const response = await api.signInWithApple(payload);
+        await persistSession(response.token, response.user);
+      },
       continueAsDemo: async () => {
         await persistSession(DEMO_TOKEN, {
           id: "demo-user",
@@ -87,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       },
       logout: async () => {
+        setApiAuthToken(null);
         setToken(null);
         setUser(null);
         await Promise.all([storage.removeItem(storageKeys.authToken), storage.removeItem(storageKeys.authUser)]);

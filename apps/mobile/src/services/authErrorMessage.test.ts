@@ -36,5 +36,6 @@ describe("getAuthErrorMessageKey", () => {
     expect(getAuthErrorMessageKey(new Error("unexpected"), "login")).toBe("auth.error.loginGeneric");
     expect(getAuthErrorMessageKey(new Error("unexpected"), "register")).toBe("auth.error.registerGeneric");
     expect(getAuthErrorMessageKey(new Error("unexpected"), "demo")).toBe("auth.error.demoGeneric");
+    expect(getAuthErrorMessageKey(new Error("unexpected"), "apple")).toBe("auth.error.appleGeneric");
   });
 });

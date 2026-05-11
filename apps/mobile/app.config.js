@@ -14,12 +14,16 @@ module.exports = {
     assetBundlePatterns: ["assets/images/*"],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.cardwise.app"
+      bundleIdentifier: "com.cardwise.app",
+      usesAppleSignIn: true,
+      infoPlist: {
+        CFBundleAllowMixedLocalizations: true
+      }
     },
     android: {
       package: "com.cardwise.app"
     },
-    plugins: ["expo-font", "expo-sqlite"],
+    plugins: ["expo-font", "expo-sqlite", "expo-apple-authentication"],
     extra: {
       apiUrl: "http://localhost:4000"
     }

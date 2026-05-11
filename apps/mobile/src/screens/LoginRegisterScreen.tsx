@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import type { AppleSignInPayload } from "../services/api";
 import { Screen } from "../components/Screen";
+import { AppleSignInButton } from "../components/AppleSignInButton";
 import { AppButton } from "../components/AppButton";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InfoCard } from "../components/InfoCard";
@@ -47,6 +49,19 @@ export function LoginRegisterScreen() {
       await auth.continueAsDemo();
     } catch (demoError) {
       setError(t(getAuthErrorMessageKey(demoError, "demo")));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function signInWithApple(payload: AppleSignInPayload) {
+    setError(null);
+    setLoading(true);
+
+    try {
+      await auth.loginWithApple(payload);
+    } catch (appleError) {
+      setError(t(getAuthErrorMessageKey(appleError, "apple")));
     } finally {
       setLoading(false);
     }
@@ -121,6 +136,12 @@ export function LoginRegisterScreen() {
             onPress={submit}
             loading={loading}
             disabled={!email || !password || (mode === "register" && password.length < 8)}
+          />
+          <AppleSignInButton
+            loading={loading}
+            separatorLabel={t("auth.or")}
+            onSuccess={signInWithApple}
+            onError={(appleError) => setError(t(getAuthErrorMessageKey(appleError, "apple")))}
           />
         </InfoCard>
 

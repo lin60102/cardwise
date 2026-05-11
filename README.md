@@ -35,6 +35,7 @@ cardwise/
 - Node.js, Express, and TypeScript
 - PostgreSQL with Prisma ORM
 - Expo SQLite for the on-device credit card catalog cache
+- Sign in with Apple via `expo-apple-authentication`
 - RevenueCat placeholder via `react-native-purchases`
 - AdMob placeholder via `react-native-google-mobile-ads`
 - Vitest tests for recommendation logic
@@ -82,7 +83,7 @@ npm run dev:mobile
 
 ## Expo Native Modules
 
-RevenueCat and AdMob use native libraries. Expo Go cannot load those modules, so purchase and ad testing requires a development build:
+RevenueCat and AdMob use native libraries. Apple Sign In also needs the iOS Sign in with Apple capability in standalone/development builds. Purchase, ad, and production Apple Sign In testing requires a development build:
 
 ```bash
 npm run ios -w @cardwise/mobile
@@ -102,6 +103,7 @@ Set these environment variables before building:
 ```bash
 EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=
 EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=
+APPLE_CLIENT_ID=com.cardwise.app
 EXPO_PUBLIC_ADMOB_USE_TEST_ADS=true
 EXPO_PUBLIC_ADMOB_IOS_APP_ID=
 EXPO_PUBLIC_ADMOB_ANDROID_APP_ID=
@@ -111,10 +113,13 @@ EXPO_PUBLIC_ADMOB_ANDROID_BANNER_AD_UNIT_ID=
 
 Keep `EXPO_PUBLIC_ADMOB_USE_TEST_ADS=true` while developing. Real ads require setting the native AdMob App IDs and banner ad unit IDs above, then rebuilding the native development build.
 
+For Apple Sign In, `APPLE_CLIENT_ID` should match the iOS bundle identifier configured in `apps/mobile/app.config.js` unless you intentionally use a different Apple Services ID.
+
 ## API Endpoints
 
 - `POST /auth/register`
 - `POST /auth/login`
+- `POST /auth/apple`
 - `GET /cards`
 - `GET /cards/search?q=chase`
 - `GET /cards/:id`

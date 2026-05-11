@@ -1,4 +1,4 @@
-export type AuthErrorContext = "login" | "register" | "demo";
+export type AuthErrorContext = "login" | "register" | "demo" | "apple";
 
 type ApiErrorLike = {
   status?: number;
@@ -60,6 +60,10 @@ export function getAuthErrorMessageKey(error: unknown, context: AuthErrorContext
 
   if (context === "demo") {
     return "auth.error.demoGeneric";
+  }
+
+  if (context === "apple") {
+    return "auth.error.appleGeneric";
   }
 
   return "auth.error.loginGeneric";

@@ -6,6 +6,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(16),
   PORT: z.coerce.number().default(4000),
   CORS_ORIGIN: z.string().default("*"),
+  APPLE_CLIENT_ID: z.string().min(1).default("com.cardwise.app"),
   REVENUECAT_WEBHOOK_SECRET: z.string().optional()
 });
 
