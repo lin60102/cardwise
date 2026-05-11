@@ -14,7 +14,12 @@ export async function getApiAuthToken(readStoredToken: StoredTokenReader) {
   return readStoredToken();
 }
 
+export async function refreshApiAuthToken(readStoredToken: StoredTokenReader) {
+  const refreshedToken = await readStoredToken();
+  apiAuthToken = refreshedToken;
+  return refreshedToken;
+}
+
 export function resetApiAuthTokenForTests() {
   apiAuthToken = undefined;
 }
-

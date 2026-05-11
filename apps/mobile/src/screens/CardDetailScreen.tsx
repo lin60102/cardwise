@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import type { CreditCardLike } from "@cardwise/shared";
+import { formatRewardRate, type CreditCardLike } from "@cardwise/shared";
 import { AppButton } from "../components/AppButton";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorBanner } from "../components/ErrorBanner";
@@ -14,11 +14,6 @@ import { colors, spacing } from "../theme";
 
 function formatRewardType(type: string) {
   return type.charAt(0).toUpperCase() + type.slice(1);
-}
-
-function formatRate(rate: number, rewardType: CreditCardLike["rewardType"]) {
-  const value = Number.isInteger(rate) ? String(rate) : rate.toFixed(1);
-  return rewardType === "cashback" ? `${value}%` : `${value}x`;
 }
 
 export function CardDetailScreen({ route, navigation }: ScreenProps<"CardDetail">) {
@@ -70,7 +65,7 @@ export function CardDetailScreen({ route, navigation }: ScreenProps<"CardDetail"
             <Text style={styles.metricLabel}>{t("detail.annualFee")}</Text>
           </View>
           <View style={styles.metric}>
-            <Text style={styles.metricValue}>{formatRate(card.baseRewardRate, card.rewardType)}</Text>
+            <Text style={styles.metricValue}>{formatRewardRate(card.baseRewardRate, card.rewardType, { fractionDigits: 1 })}</Text>
             <Text style={styles.metricLabel}>{t("detail.baseRate")}</Text>
           </View>
           <View style={styles.metric}>
@@ -92,7 +87,7 @@ export function CardDetailScreen({ route, navigation }: ScreenProps<"CardDetail"
                 <Text style={styles.rowTitle}>{categoryLabel(reward.category)}</Text>
                 <Text style={styles.rowMeta}>{reward.label ?? t("detail.eligible")}</Text>
               </View>
-              <Text style={styles.rate}>{formatRate(reward.rate, card.rewardType)}</Text>
+              <Text style={styles.rate}>{formatRewardRate(reward.rate, card.rewardType, { fractionDigits: 1 })}</Text>
             </View>
             {reward.capAmount ? (
               <Text style={styles.cap}>

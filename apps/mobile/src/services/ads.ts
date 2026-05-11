@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import Constants from "expo-constants";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 
 const TEST_BANNER_AD_UNIT_IDS = {
   android: "ca-app-pub-3940256099942544/6300978111",
@@ -12,8 +12,12 @@ export function isNativeAdRuntime() {
   return Platform.OS === "android" || Platform.OS === "ios";
 }
 
+function isExpoGoRuntime() {
+  return Constants.executionEnvironment === ExecutionEnvironment.StoreClient && Constants.expoGoConfig !== null;
+}
+
 export function canUseNativeAds() {
-  return isNativeAdRuntime() && Constants.appOwnership !== "expo" && process.env.EXPO_PUBLIC_ENABLE_NATIVE_ADS === "true";
+  return isNativeAdRuntime() && !isExpoGoRuntime() && process.env.EXPO_PUBLIC_ENABLE_NATIVE_ADS === "true";
 }
 
 function shouldUseTestAds() {

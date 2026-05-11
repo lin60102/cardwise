@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getApiAuthToken, resetApiAuthTokenForTests, setApiAuthToken } from "./authTokenState";
+import {
+  getApiAuthToken,
+  refreshApiAuthToken,
+  resetApiAuthTokenForTests,
+  setApiAuthToken,
+} from "./authTokenState";
 
 describe("auth token state", () => {
   afterEach(() => {
@@ -30,5 +35,26 @@ describe("auth token state", () => {
     await expect(getApiAuthToken(readStoredToken)).resolves.toBeNull();
     expect(readStoredToken).not.toHaveBeenCalled();
   });
-});
 
+  it("refreshes the in-memory token from storage after token rotation", async () => {
+    const readStoredToken = vi
+      .fn()
+      .mockResolvedValueOnce("old-token")
+      .mockResolvedValueOnce("rotated-token");
+
+    await expect(getApiAuthToken(readStoredToken)).resolves.toBe("old-token");
+    await expect(refreshApiAuthToken(readStoredToken)).resolves.toBe("rotated-token");
+    await expect(getApiAuthToken(readStoredToken)).resolves.toBe("rotated-token");
+    expect(readStoredToken).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears the in-memory token when refreshed storage no longer has a token", async () => {
+    const readStoredToken = vi.fn().mockResolvedValue(null);
+
+    setApiAuthToken("expired-token");
+
+    await expect(refreshApiAuthToken(readStoredToken)).resolves.toBeNull();
+    await expect(getApiAuthToken(readStoredToken)).resolves.toBeNull();
+    expect(readStoredToken).toHaveBeenCalledTimes(1);
+  });
+});

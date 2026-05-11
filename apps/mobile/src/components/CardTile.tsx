@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import type { CreditCardLike } from "@cardwise/shared";
+import { formatRewardRate, type CreditCardLike } from "@cardwise/shared";
 import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
 import { spacing } from "../theme";
@@ -10,11 +10,6 @@ interface CardTileProps {
   card: CreditCardLike;
   onPress?: () => void;
   trailing?: ReactNode;
-}
-
-function formatRate(rate: number, rewardType: CreditCardLike["rewardType"]) {
-  const value = Number.isInteger(rate) ? String(rate) : rate.toFixed(1);
-  return rewardType === "cashback" ? `${value}%` : `${value}x`;
 }
 
 export function CardTile({ card, onPress, trailing }: CardTileProps) {
@@ -41,10 +36,10 @@ export function CardTile({ card, onPress, trailing }: CardTileProps) {
         </Text>
         <View style={styles.rewardRow}>
           <Text style={[styles.rewardText, { color: colors.primary, backgroundColor: colors.successSoft }]}>
-            {t("card.topEarn", { rate: formatRate(strongestRate, card.rewardType) })}
+            {t("card.topEarn", { rate: formatRewardRate(strongestRate, card.rewardType, { fractionDigits: 1 }) })}
           </Text>
           <Text style={[styles.baseText, { color: colors.muted, backgroundColor: colors.surfaceAlt }]}>
-            {t("card.baseEarn", { rate: formatRate(card.baseRewardRate, card.rewardType) })}
+            {t("card.baseEarn", { rate: formatRewardRate(card.baseRewardRate, card.rewardType, { fractionDigits: 1 }) })}
           </Text>
         </View>
       </View>

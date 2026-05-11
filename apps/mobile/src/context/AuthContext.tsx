@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { api, DEMO_TOKEN, type AppleSignInPayload, type AuthUser } from "../services/api";
-import { setApiAuthToken } from "../services/authTokenState";
+import { refreshApiAuthToken, setApiAuthToken } from "../services/authTokenState";
 import { ensureLocalCardCacheSeeded } from "../services/localCardCache";
 import { configureRevenueCat } from "../services/revenueCat";
 import { storage, storageKeys } from "../services/storage";
@@ -33,12 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await ensureLocalCardCacheSeeded();
 
         const [storedToken, storedUser, storedOnboarded] = await Promise.all([
-          storage.getItem(storageKeys.authToken),
+          refreshApiAuthToken(() => storage.getItem(storageKeys.authToken)),
           storage.getItem(storageKeys.authUser),
           storage.getItem(storageKeys.hasOnboarded)
         ]);
 
-        setApiAuthToken(storedToken);
         setToken(storedToken);
         setUser(storedUser ? (JSON.parse(storedUser) as AuthUser) : null);
         setHasOnboarded(storedOnboarded === "true");

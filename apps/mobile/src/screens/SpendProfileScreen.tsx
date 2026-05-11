@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { getBestCardRecommendation, type PurchaseCategory } from "@cardwise/shared";
+import { formatRewardTotals, getSpendProjection, type PurchaseCategory } from "@cardwise/shared";
 import { AppButton } from "../components/AppButton";
 import { CategoryVisual } from "../components/CategoryVisual";
 import { EmptyState } from "../components/EmptyState";
@@ -41,38 +41,9 @@ const BUSINESS_PROFILE_CATEGORIES: PurchaseCategory[] = [
 
 type SpendProfileValues = Partial<Record<PurchaseCategory, string>>;
 
-interface ProjectionRow {
-  category: PurchaseCategory;
-  annualSpend: number;
-  primaryCardName: string | null;
-  rewardTotals: {
-    dollars: number;
-    points: number;
-    miles: number;
-  };
-}
-
 function parseAmount(value: string | undefined) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-}
-
-function formatProjectionReward(row: ProjectionRow) {
-  const pieces = [];
-
-  if (row.rewardTotals.dollars > 0) {
-    pieces.push(`$${row.rewardTotals.dollars.toFixed(2)}`);
-  }
-
-  if (row.rewardTotals.points > 0) {
-    pieces.push(`${Math.round(row.rewardTotals.points).toLocaleString()} points`);
-  }
-
-  if (row.rewardTotals.miles > 0) {
-    pieces.push(`${Math.round(row.rewardTotals.miles).toLocaleString()} miles`);
-  }
-
-  return pieces.join(" - ");
 }
 
 export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) {
@@ -110,80 +81,26 @@ export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) 
     void load();
   }, []);
 
-  const projections = useMemo<ProjectionRow[]>(() => {
+  const projection = useMemo(() => {
     const cards = wallet.map((walletCard) => walletCard.card);
+    const monthlySpendByCategory = categories.reduce<Partial<Record<PurchaseCategory, number>>>((values, category) => {
+      const monthlySpend = parseAmount(profile[category]);
+      if (monthlySpend > 0) {
+        values[category] = monthlySpend;
+      }
 
-    return categories
-      .map((category) => {
-        const monthlySpend = parseAmount(profile[category]);
-        if (monthlySpend <= 0) {
-          return null;
-        }
+      return values;
+    }, {});
 
-        const annualSpend = monthlySpend * 12;
-        const rewardTotals = { dollars: 0, points: 0, miles: 0 };
-        const annualSpendByCardCategory: Record<string, number> = {};
-        let quarterlySpendByCardCategory: Record<string, number> = {};
-        const cardWinCounts: Record<string, number> = {};
-
-        for (let monthIndex = 0; monthIndex < 12; monthIndex += 1) {
-          if (monthIndex > 0 && monthIndex % 3 === 0) {
-            quarterlySpendByCardCategory = {};
-          }
-
-          const recommendation = getBestCardRecommendation({
-            cards,
-            category,
-            purchaseAmount: monthlySpend,
-            currentSpendByCardCategory: {
-              ...annualSpendByCardCategory,
-              ...quarterlySpendByCardCategory
-            }
-          });
-          const bestCard = recommendation.bestCard;
-
-          if (!bestCard) {
-            continue;
-          }
-
-          rewardTotals[bestCard.estimatedRewardUnit] += bestCard.estimatedRewardAmount;
-          cardWinCounts[bestCard.card.name] = (cardWinCounts[bestCard.card.name] ?? 0) + 1;
-
-          const capPeriod = bestCard.matchedCategory?.capPeriod;
-          const spendKey = `${bestCard.card.id}:${category}`;
-          if (capPeriod === "annual") {
-            annualSpendByCardCategory[spendKey] = (annualSpendByCardCategory[spendKey] ?? 0) + monthlySpend;
-          } else if (capPeriod === "quarterly") {
-            quarterlySpendByCardCategory[spendKey] = (quarterlySpendByCardCategory[spendKey] ?? 0) + monthlySpend;
-          }
-        }
-
-        const primaryCardName =
-          Object.entries(cardWinCounts).sort((left, right) => right[1] - left[1])[0]?.[0] ?? null;
-
-        const row: ProjectionRow = {
-          category,
-          annualSpend,
-          primaryCardName,
-          rewardTotals
-        };
-
-        return row;
-      })
-      .filter((row): row is ProjectionRow => Boolean(row));
+    return getSpendProjection({
+      cards,
+      categories,
+      monthlySpendByCategory
+    });
   }, [categories, profile, wallet]);
 
-  const totals = useMemo(() => {
-    return projections.reduce(
-      (summary, row) => {
-        summary.dollars += row.rewardTotals.dollars;
-        summary.points += row.rewardTotals.points;
-        summary.miles += row.rewardTotals.miles;
-        return summary;
-      },
-      { dollars: 0, points: 0, miles: 0 }
-    );
-  }, [projections]);
+  const projections = projection.rows;
+  const totals = projection.totals;
 
   async function saveProfile() {
     setSaving(true);
@@ -278,7 +195,7 @@ export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) 
                 </View>
                 {row.primaryCardName ? (
                   <Text style={[styles.best, { color: themeColors.primary }]}>
-                    {row.primaryCardName} - {formatProjectionReward(row)}
+                    {row.primaryCardName} - {formatRewardTotals(row.rewardTotals)}
                   </Text>
                 ) : null}
               </InfoCard>

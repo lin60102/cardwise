@@ -5,19 +5,12 @@ import type {
   RecommendationResult,
   RewardCategoryLike
 } from "./types.js";
+import { formatRewardRate } from "./rewardFormatting.js";
 
 const DEFAULT_PURCHASE_AMOUNT = 100;
 
 function formatRate(card: CreditCardLike, rate: number): string {
-  if (card.rewardType === "cashback") {
-    return `${trimRate(rate)}%`;
-  }
-
-  return `${trimRate(rate)}x`;
-}
-
-function trimRate(rate: number): string {
-  return Number.isInteger(rate) ? String(rate) : rate.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  return formatRewardRate(rate, card.rewardType, { trimTrailingZeros: true });
 }
 
 function calculateEstimatedRewardAmount(card: CreditCardLike, effectiveRewardRate: number, purchaseAmount: number): number {

@@ -1,4 +1,5 @@
 import * as SQLite from "expo-sqlite";
+import { Platform } from "react-native";
 import type { CardBenefitLike, CreditCardLike, RewardCategoryLike } from "@cardwise/shared";
 import { DEMO_CARDS } from "./demoData";
 
@@ -102,12 +103,24 @@ function fallbackSearch(query: string) {
   );
 }
 
+async function withWriteTransaction(
+  db: SQLite.SQLiteDatabase,
+  task: (transaction: SQLite.SQLiteDatabase) => Promise<void>
+) {
+  if (Platform.OS === "web") {
+    await db.withTransactionAsync(() => task(db));
+    return;
+  }
+
+  await db.withExclusiveTransactionAsync(task);
+}
+
 async function writeCardsToCache(db: SQLite.SQLiteDatabase, cards: CreditCardLike[]) {
   const updatedAt = Date.now();
 
-  await db.withTransactionAsync(async () => {
+  await withWriteTransaction(db, async (transaction) => {
     for (const card of cards) {
-      await db.runAsync(
+      await transaction.runAsync(
         `
           INSERT OR REPLACE INTO credit_cards (
             id,

@@ -1,27 +1,27 @@
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { PURCHASE_CATEGORIES, type PurchaseCategory, type RecommendationResult } from "@cardwise/shared";
+import {
+  formatEstimatedReward,
+  formatRewardRate,
+  PURCHASE_CATEGORIES,
+  type PurchaseCategory,
+  type RecommendationResult
+} from "@cardwise/shared";
 import { AppButton } from "../components/AppButton";
 import { AdBanner } from "../components/AdBanner";
 import { CategoryVisual } from "../components/CategoryVisual";
 import { EmptyState } from "../components/EmptyState";
-import { ErrorBanner } from "../components/ErrorBanner";
 import { InfoCard } from "../components/InfoCard";
 import { Screen } from "../components/Screen";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
+import type { ScreenProps } from "../navigation/types";
 import { api } from "../services/api";
 import { colors, spacing } from "../theme";
-import { formatEstimatedReward } from "../utils/rewardFormatting";
 
-function formatRate(rate: number, rewardType?: string) {
-  const value = Number.isInteger(rate) ? String(rate) : rate.toFixed(2);
-  return rewardType === "cashback" ? `${value}%` : `${value}x`;
-}
-
-export function RecommendationScreen() {
+export function RecommendationScreen({ navigation }: ScreenProps<"Recommendation">) {
   const { user } = useAuth();
   const { t, categoryLabel } = useLanguage();
   const { colors: themeColors } = useAppTheme();
@@ -29,25 +29,37 @@ export function RecommendationScreen() {
   const [purchaseAmount, setPurchaseAmount] = useState("");
   const [showAmountDetails, setShowAmountDetails] = useState(false);
   const [result, setResult] = useState<RecommendationResult | null>(null);
+  const [pendingCategory, setPendingCategory] = useState<PurchaseCategory | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const selectedCategoryLabel = categoryLabel(category);
+  const loadingCategoryLabel = categoryLabel(pendingCategory ?? category);
+  const resultCategoryLabel = result ? categoryLabel(result.category) : selectedCategoryLabel;
+  const loadingSteps = [
+    t("recommend.loading.step1"),
+    t("recommend.loading.step2"),
+    t("recommend.loading.step3")
+  ];
 
   async function recommend() {
+    const requestCategory = category;
     setError(null);
+    setResult(null);
     setLoading(true);
+    setPendingCategory(requestCategory);
 
     try {
       const amount = Number(purchaseAmount);
       const response = await api.recommendBestCard({
-        category,
+        category: requestCategory,
         purchaseAmount: showAmountDetails && Number.isFinite(amount) && amount > 0 ? amount : undefined
       });
       setResult(response);
-    } catch (recommendError) {
-      setError(recommendError instanceof Error ? recommendError.message : "Unable to get recommendation.");
+    } catch {
+      setError(t("recommend.error.message"));
     } finally {
       setLoading(false);
+      setPendingCategory(null);
     }
   }
 
@@ -124,21 +136,60 @@ export function RecommendationScreen() {
         </InfoCard>
       ) : null}
 
-      <ErrorBanner message={error} />
       <AppButton title={t("recommend.cta")} onPress={recommend} loading={loading} />
 
-      {result?.bestCard ? (
+      {loading ? (
+        <InfoCard tone="info">
+          <View style={styles.stateHeader}>
+            <View style={[styles.stateIcon, { backgroundColor: themeColors.surface }]}>
+              <ActivityIndicator color={themeColors.primary} />
+            </View>
+            <View style={styles.stateCopy}>
+              <Text style={[styles.stateTitle, { color: themeColors.text }]}>{t("recommend.loading.title")}</Text>
+              <Text style={[styles.stateMessage, { color: themeColors.muted }]}>
+                {t("recommend.loading.message", { category: loadingCategoryLabel })}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.loadingChecklist}>
+            {loadingSteps.map((step) => (
+              <View key={step} style={styles.loadingRow}>
+                <View style={[styles.loadingDot, { backgroundColor: themeColors.primary }]} />
+                <Text style={[styles.loadingStep, { color: themeColors.muted }]}>{step}</Text>
+              </View>
+            ))}
+          </View>
+        </InfoCard>
+      ) : error ? (
+        <InfoCard tone="warm">
+          <View style={styles.stateHeader}>
+            <View style={[styles.stateIcon, { backgroundColor: themeColors.accentSoft }]}>
+              <Feather name="alert-circle" size={22} color={themeColors.danger} />
+            </View>
+            <View style={styles.stateCopy}>
+              <Text style={[styles.stateTitle, { color: themeColors.text }]}>{t("recommend.error.title")}</Text>
+              <Text style={[styles.stateMessage, { color: themeColors.muted }]}>{error}</Text>
+            </View>
+          </View>
+          <AppButton
+            title={t("recommend.error.retry")}
+            variant="secondary"
+            icon={<Feather name="refresh-cw" size={18} color={themeColors.primary} />}
+            onPress={() => void recommend()}
+          />
+        </InfoCard>
+      ) : result?.bestCard ? (
         <>
           <InfoCard tone="success">
             <View style={styles.bestHeader}>
               <View style={styles.bestIcon}>
                 <Feather name="check-circle" size={22} color={themeColors.surface} />
               </View>
-              <Text style={[styles.bestLabel, { color: themeColors.primary }]}>{t("recommend.bestFor", { category: selectedCategoryLabel })}</Text>
+              <Text style={[styles.bestLabel, { color: themeColors.primary }]}>{t("recommend.bestFor", { category: resultCategoryLabel })}</Text>
             </View>
             <Text style={[styles.bestName, { color: themeColors.text }]}>{result.bestCard.card.name}</Text>
             <Text style={[styles.bestRate, { color: themeColors.accent }]}>
-              {formatRate(result.bestCard.effectiveRewardRate, result.bestCard.card.rewardType)} {t("recommend.estimated")}
+              {formatRewardRate(result.bestCard.effectiveRewardRate, result.bestCard.card.rewardType)} {t("recommend.estimated")}
             </Text>
             <Text style={[styles.rewardAmount, { color: themeColors.primary }]}>
               {formatEstimatedReward(result.bestCard)} {t("recommend.onPurchase")}
@@ -157,7 +208,7 @@ export function RecommendationScreen() {
                   <View style={styles.rankBody}>
                     <Text style={[styles.rankName, { color: themeColors.text }]}>{rankedCard.card.name}</Text>
                     <Text style={[styles.rankMeta, { color: themeColors.muted }]}>
-                      {formatRate(rankedCard.effectiveRewardRate, rankedCard.card.rewardType)}
+                      {formatRewardRate(rankedCard.effectiveRewardRate, rankedCard.card.rewardType)}
                       {" • "}
                       {formatEstimatedReward(rankedCard)}
                       {rankedCard.capApplied ? ` ${t("recommend.afterCap")}` : ""}
@@ -169,7 +220,13 @@ export function RecommendationScreen() {
           </View>
         </>
       ) : result ? (
-        <EmptyState title={t("recommend.noWallet.title")} message={result.explanation} icon="briefcase" />
+        <EmptyState
+          title={t("recommend.noWallet.title")}
+          message={t("recommend.noWallet.message")}
+          actionLabel={t("recommend.noWallet.action")}
+          onAction={() => navigation.navigate("AddCards")}
+          icon="briefcase"
+        />
       ) : null}
 
       {user?.plan === "FREE" ? <AdBanner /> : null}
@@ -299,6 +356,54 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     paddingHorizontal: spacing.md
+  },
+  stateHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md
+  },
+  stateIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface
+  },
+  stateCopy: {
+    flex: 1,
+    gap: 4
+  },
+  stateTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "900"
+  },
+  stateMessage: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  loadingChecklist: {
+    gap: spacing.xs,
+    paddingTop: spacing.xs
+  },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm
+  },
+  loadingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    opacity: 0.75
+  },
+  loadingStep: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "700"
   },
   bestHeader: {
     flexDirection: "row",
