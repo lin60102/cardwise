@@ -88,7 +88,7 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
       </InfoCard>
 
       <AppButton title={t("paywall.continue")} onPress={purchase} loading={loading} />
-      <AppButton title={t("paywall.later")} variant="ghost" onPress={() => navigation.navigate("MyWallet")} />
+      <AppButton title={t("paywall.later")} variant="ghost" onPress={() => navigation.navigate("MainTabs", { screen: "MyWallet" })} />
     </Screen>
   );
 }

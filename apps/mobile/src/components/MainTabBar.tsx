@@ -1,13 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation, useRoute, type NavigationProp } from "@react-navigation/native";
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
-import type { RootStackParamList } from "../navigation/types";
+import type { MainTabParamList } from "../navigation/types";
 import { spacing } from "../theme";
 
 const MAIN_TABS: Array<{
-  routeName: keyof Pick<RootStackParamList, "MyWallet" | "Recommendation" | "SpendProfile" | "BonusTracker" | "Settings">;
+  routeName: keyof MainTabParamList;
   labelKey: string;
   icon: keyof typeof Feather.glyphMap;
 }> = [
@@ -22,9 +22,7 @@ export function isMainTabRoute(routeName: string) {
   return MAIN_TABS.some((item) => item.routeName === routeName);
 }
 
-export function MainTabBar() {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const route = useRoute();
+export function MainTabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useLanguage();
   const { colors } = useAppTheme();
 
@@ -32,7 +30,8 @@ export function MainTabBar() {
     <View style={[styles.wrap, { backgroundColor: colors.background }]}>
       <View style={[styles.bar, { backgroundColor: colors.surface, borderColor: colors.border, shadowColor: colors.ink }]}>
         {MAIN_TABS.map((item) => {
-          const active = route.name === item.routeName;
+          const tabIndex = state.routes.findIndex((route) => route.name === item.routeName);
+          const active = state.index === tabIndex;
           return (
             <Pressable
               key={item.routeName}

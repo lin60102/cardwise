@@ -113,7 +113,7 @@ export function CardDetailScreen({ route, navigation }: ScreenProps<"CardDetail"
         <EmptyState title={t("detail.noCredits.title")} message={t("detail.noCredits.message")} />
       )}
 
-      <AppButton title={t("common.backToWallet")} variant="ghost" onPress={() => navigation.navigate("MyWallet")} />
+      <AppButton title={t("common.backToWallet")} variant="ghost" onPress={() => navigation.navigate("MainTabs", { screen: "MyWallet" })} />
     </Screen>
   );
 }

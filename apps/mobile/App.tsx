@@ -1,4 +1,5 @@
 import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -18,10 +19,30 @@ import { RecommendationScreen } from "./src/screens/RecommendationScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { SpendProfileScreen } from "./src/screens/SpendProfileScreen";
 import { SupportScreen } from "./src/screens/SupportScreen";
-import type { RootStackParamList } from "./src/navigation/types";
+import type { MainTabParamList, RootStackParamList } from "./src/navigation/types";
 import { LoadingState } from "./src/components/LoadingState";
+import { MainTabBar } from "./src/components/MainTabBar";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
+
+function MainTabsNavigator() {
+  return (
+    <Tab.Navigator
+      tabBar={(props) => <MainTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+        lazy: true
+      }}
+    >
+      <Tab.Screen name="MyWallet" component={MyWalletScreen} />
+      <Tab.Screen name="Recommendation" component={RecommendationScreen} />
+      <Tab.Screen name="SpendProfile" component={SpendProfileScreen} />
+      <Tab.Screen name="BonusTracker" component={BonusTrackerScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
+    </Tab.Navigator>
+  );
+}
 
 function RootNavigator() {
   const { token, hasOnboarded, isBooting } = useAuth();
@@ -48,16 +69,12 @@ function RootNavigator() {
           <Stack.Screen name="LoginRegister" component={LoginRegisterScreen} options={{ headerShown: false }} />
         ) : (
           <>
-            <Stack.Screen name="MyWallet" component={MyWalletScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="MainTabs" component={MainTabsNavigator} options={{ headerShown: false }} />
             <Stack.Screen name="AddCards" component={AddCardsScreen} options={{ title: t("wallet.addCards") }} />
-            <Stack.Screen name="Recommendation" component={RecommendationScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="SpendProfile" component={SpendProfileScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="BonusTracker" component={BonusTrackerScreen} options={{ headerShown: false }} />
             <Stack.Screen name="CardDetail" component={CardDetailScreen} options={{ title: t("detail.title") }} />
             <Stack.Screen name="Paywall" component={PaywallScreen} options={{ title: "CardWise Premium" }} />
             <Stack.Screen name="Support" component={SupportScreen} options={{ title: t("support.navTitle") }} />
             <Stack.Screen name="AnnualDashboard" component={AnnualDashboardScreen} options={{ title: t("wallet.annualValue") }} />
-            <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
           </>
         )}
       </Stack.Navigator>

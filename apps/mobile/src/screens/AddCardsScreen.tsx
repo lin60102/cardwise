@@ -61,7 +61,7 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
 
     try {
       await api.addWalletCard(cardId);
-      navigation.navigate("MyWallet");
+      navigation.navigate("MainTabs", { screen: "MyWallet" });
     } catch (addError) {
       if (addError instanceof ApiError && addError.code === "FREE_CARD_LIMIT_REACHED") {
         navigation.navigate("Paywall", { reason: t("demo.errorLimit") });
@@ -164,7 +164,7 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
         </View>
       )}
 
-      <AppButton title={t("common.backToWallet")} variant="ghost" onPress={() => navigation.navigate("MyWallet")} />
+      <AppButton title={t("common.backToWallet")} variant="ghost" onPress={() => navigation.navigate("MainTabs", { screen: "MyWallet" })} />
     </Screen>
   );
 }
