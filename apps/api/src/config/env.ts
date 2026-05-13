@@ -7,6 +7,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(4000),
   CORS_ORIGIN: z.string().default("*"),
   APPLE_CLIENT_ID: z.string().min(1).default("com.cardwise.app"),
+  PROMO_CODES: z.string().optional(),
   REVENUECAT_WEBHOOK_SECRET: z.string().optional()
 });
 

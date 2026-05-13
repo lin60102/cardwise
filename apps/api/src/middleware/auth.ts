@@ -3,6 +3,7 @@ import { prisma } from "../db.js";
 import type { AuthRequest } from "../types.js";
 import { AppError } from "../utils/errors.js";
 import { verifyAuthToken } from "../utils/auth.js";
+import { getEffectivePlan } from "../services/subscriptionService.js";
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {
@@ -26,7 +27,7 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
     (req as AuthRequest).user = {
       id: user.id,
       email: user.email,
-      plan: user.subscription?.plan ?? "FREE"
+      plan: getEffectivePlan(user.subscription)
     };
 
     next();

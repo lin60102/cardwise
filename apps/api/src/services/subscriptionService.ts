@@ -1,5 +1,23 @@
 import { prisma } from "../db.js";
 
+interface SubscriptionState {
+  plan: "FREE" | "PREMIUM";
+  expiresAt?: Date | null;
+  lifetime?: boolean;
+}
+
+export function getEffectivePlan(subscription: SubscriptionState | null | undefined, now = new Date()) {
+  if (!subscription || subscription.plan !== "PREMIUM") {
+    return "FREE";
+  }
+
+  if (subscription.lifetime || !subscription.expiresAt || subscription.expiresAt > now) {
+    return "PREMIUM";
+  }
+
+  return "FREE";
+}
+
 interface RevenueCatWebhookEvent {
   event?: {
     app_user_id?: string;
@@ -43,4 +61,3 @@ export async function syncRevenueCatWebhook(payload: RevenueCatWebhookEvent) {
     }
   });
 }
-

@@ -258,5 +258,15 @@ export const api = {
     }
 
     return request<{ plan: "FREE" | "PREMIUM"; subscription: unknown }>("/subscription/status");
+  },
+  redeemPromoCode: async (code: string) => {
+    if (await isDemoSession()) {
+      throw new ApiError("Promo codes require a signed-in CardWise account.", 401, "PROMO_CODE_AUTH_REQUIRED");
+    }
+
+    return request<{ plan: "FREE" | "PREMIUM"; subscription: unknown }>("/subscription/promo-code", {
+      method: "POST",
+      body: JSON.stringify({ code })
+    });
   }
 };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppButton } from "../components/AppButton";
 import { ErrorBanner } from "../components/ErrorBanner";
@@ -15,12 +15,15 @@ import type { ScreenProps } from "../navigation/types";
 import { colors, spacing, type ThemeMode } from "../theme";
 
 export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
-  const { user, logout, refreshSubscription } = useAuth();
+  const { user, logout, refreshSubscription, redeemPromoCode } = useAuth();
   const { t, language } = useLanguage();
   const { mode, setMode, colors: themeColors } = useAppTheme();
   const { showBusinessCards, setShowBusinessCards } = useFeatureSettings();
   const [error, setError] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoMessage, setPromoMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [redeemingPromo, setRedeemingPromo] = useState(false);
 
   async function refreshPlan() {
     setError(null);
@@ -46,6 +49,22 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
 
   async function selectTheme(nextMode: ThemeMode) {
     await setMode(nextMode);
+  }
+
+  async function submitPromoCode() {
+    setError(null);
+    setPromoMessage(null);
+    setRedeemingPromo(true);
+
+    try {
+      await redeemPromoCode(promoCode);
+      setPromoCode("");
+      setPromoMessage(t("settings.promoSuccess"));
+    } catch (promoError) {
+      setError(promoError instanceof Error ? promoError.message : t("settings.promoError"));
+    } finally {
+      setRedeemingPromo(false);
+    }
   }
 
   return (
@@ -130,6 +149,27 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
         </View>
       </InfoCard>
 
+      <InfoCard tone="success">
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{t("settings.promoTitle")}</Text>
+        <Text style={[styles.copy, { color: themeColors.muted }]}>{t("settings.promoCopy")}</Text>
+        {promoMessage ? <Text style={[styles.status, { color: themeColors.success }]}>{promoMessage}</Text> : null}
+        <TextInput
+          style={[styles.input, { backgroundColor: themeColors.surface, borderColor: themeColors.border, color: themeColors.text }]}
+          placeholder={t("settings.promoPlaceholder")}
+          placeholderTextColor={colors.muted}
+          value={promoCode}
+          onChangeText={setPromoCode}
+          autoCapitalize="characters"
+          autoCorrect={false}
+        />
+        <AppButton
+          title={t("settings.promoRedeem")}
+          onPress={submitPromoCode}
+          loading={redeemingPromo}
+          disabled={!promoCode.trim()}
+        />
+      </InfoCard>
+
       <InfoCard tone="warm">
         <View style={styles.settingRow}>
           <View style={styles.settingText}>
@@ -197,6 +237,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm
+  },
+  input: {
+    minHeight: 52,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    color: colors.text,
+    fontSize: 16
   },
   settingRow: {
     flexDirection: "row",
