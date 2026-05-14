@@ -23,7 +23,7 @@ module.exports = {
     android: {
       package: "com.cardwise.app"
     },
-    plugins: ["expo-font", "expo-sqlite", "expo-apple-authentication"],
+    plugins: ["expo-font", "expo-sqlite", "expo-apple-authentication", "expo-secure-store"],
     extra: {
       apiUrl: "http://localhost:4000"
     }
