@@ -8,7 +8,9 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default("*"),
   APPLE_CLIENT_ID: z.string().min(1).default("com.cardwise.app"),
   PROMO_CODES: z.string().optional(),
-  REVENUECAT_WEBHOOK_SECRET: z.string().optional()
+  REVENUECAT_WEBHOOK_SECRET: z.string().optional(),
+  REVENUECAT_SECRET_API_KEY: z.string().optional(),
+  REVENUECAT_ENTITLEMENT_ID: z.string().default("premium")
 });
 
 export const env = envSchema.parse(process.env);

@@ -268,5 +268,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ code })
     });
+  },
+  syncRevenueCatSubscription: async () => {
+    if (await isDemoSession()) {
+      throw new ApiError("RevenueCat purchases require a signed-in CardWise account.", 401, "REVENUECAT_AUTH_REQUIRED");
+    }
+
+    return request<{ plan: "FREE" | "PREMIUM"; subscription: unknown }>("/subscription/revenuecat/sync", {
+      method: "POST",
+      body: JSON.stringify({})
+    });
   }
 };

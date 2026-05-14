@@ -8,8 +8,7 @@ import type { AuthRequest } from "../types.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { AppError } from "../utils/errors.js";
 import { redeemPromoCode } from "../services/promoCodeService.js";
-import { getEffectivePlan } from "../services/subscriptionService.js";
-import { syncRevenueCatWebhook } from "../services/subscriptionService.js";
+import { getEffectivePlan, syncRevenueCatSubscriber, syncRevenueCatWebhook } from "../services/subscriptionService.js";
 
 export const subscriptionRouter = Router();
 
@@ -38,6 +37,19 @@ subscriptionRouter.post(
   asyncHandler(async (req: AuthRequest, res) => {
     const input = promoCodeSchema.parse(req.body);
     const subscription = await redeemPromoCode(req.user!.id, input.code, env.PROMO_CODES);
+
+    return res.json({
+      plan: getEffectivePlan(subscription),
+      subscription
+    });
+  })
+);
+
+subscriptionRouter.post(
+  "/revenuecat/sync",
+  requireAuth,
+  asyncHandler(async (req: AuthRequest, res) => {
+    const subscription = await syncRevenueCatSubscriber(req.user!.id);
 
     return res.json({
       plan: getEffectivePlan(subscription),

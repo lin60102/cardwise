@@ -1,19 +1,25 @@
-import { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppButton } from "../components/AppButton";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InfoCard } from "../components/InfoCard";
 import { Screen } from "../components/Screen";
+import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import type { ScreenProps } from "../navigation/types";
-import { purchasePlaceholder } from "../services/revenueCat";
+import {
+  fetchPremiumOfferings,
+  purchasePremiumPlan,
+  restorePremiumPurchases,
+  type PremiumOfferingPlan,
+  type PremiumPlanId
+} from "../services/revenueCat";
 import { colors, spacing } from "../theme";
 
 const plans = [
   { id: "monthly" as const, nameKey: "paywall.monthly", price: "$2.99", noteKey: "paywall.monthlyNote" },
-  { id: "yearly" as const, nameKey: "paywall.yearly", price: "$24.99", noteKey: "paywall.yearlyNote" },
-  { id: "lifetime" as const, nameKey: "paywall.lifetime", price: "$59.99", noteKey: "paywall.lifetimeNote" }
+  { id: "yearly" as const, nameKey: "paywall.yearly", price: "$24.99", noteKey: "paywall.yearlyNote" }
 ];
 
 const benefits = [
@@ -27,15 +33,78 @@ const benefits = [
 
 export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
   const { t } = useLanguage();
-  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly" | "lifetime">("yearly");
+  const { syncRevenueCatSubscription } = useAuth();
+  const [selectedPlan, setSelectedPlan] = useState<PremiumPlanId>("yearly");
+  const [offeringPlans, setOfferingPlans] = useState<PremiumOfferingPlan[]>([]);
+  const [offeringsLoading, setOfferingsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(route.params?.reason ?? null);
   const [loading, setLoading] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+
+  useEffect(() => {
+    async function loadOfferings() {
+      setOfferingsLoading(true);
+      const nextPlans = await fetchPremiumOfferings();
+      setOfferingPlans(nextPlans);
+      if (nextPlans.length === 0) {
+        setMessage((currentMessage) => currentMessage ?? t("demo.purchaseMessage"));
+      }
+      setOfferingsLoading(false);
+    }
+
+    void loadOfferings();
+  }, [t]);
+
+  const offeringsByPlan = useMemo(
+    () => new Map(offeringPlans.map((plan) => [plan.id, plan])),
+    [offeringPlans]
+  );
 
   async function purchase() {
+    const revenueCatPlan = offeringsByPlan.get(selectedPlan);
+    if (!revenueCatPlan) {
+      setMessage(t("demo.purchaseMessage"));
+      return;
+    }
+
     setLoading(true);
-    const result = await purchasePlaceholder(selectedPlan);
-    setMessage(result.success ? null : t("demo.purchaseMessage"));
-    setLoading(false);
+    setMessage(null);
+
+    try {
+      const result = await purchasePremiumPlan(revenueCatPlan);
+      if (!result.success) {
+        setMessage(result.cancelled ? null : result.message ?? t("paywall.purchaseError"));
+        return;
+      }
+
+      // The backend verifies RevenueCat status before unlocking server-enforced Premium gates.
+      await syncRevenueCatSubscription();
+      setMessage(result.isPremium ? t("paywall.purchaseSuccess") : t("paywall.syncPending"));
+    } catch {
+      setMessage(t("paywall.syncError"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function restore() {
+    setRestoring(true);
+    setMessage(null);
+
+    try {
+      const result = await restorePremiumPurchases();
+      if (!result.success) {
+        setMessage(result.message ?? t("paywall.restoreError"));
+        return;
+      }
+
+      await syncRevenueCatSubscription();
+      setMessage(result.isPremium ? t("paywall.restoreSuccess") : t("paywall.noPurchases"));
+    } catch {
+      setMessage(t("paywall.syncError"));
+    } finally {
+      setRestoring(false);
+    }
   }
 
   return (
@@ -71,12 +140,19 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
               <Text style={styles.planNote}>{t(plan.noteKey)}</Text>
             </View>
             <View style={styles.planRight}>
-              <Text style={styles.planPrice}>{plan.price}</Text>
+              <Text style={styles.planPrice}>{offeringsByPlan.get(plan.id)?.price ?? plan.price}</Text>
               {selectedPlan === plan.id ? <Feather name="check-circle" size={20} color={colors.primary} /> : null}
             </View>
           </Pressable>
         ))}
       </View>
+
+      {offeringsLoading ? (
+        <View style={styles.loadingRow}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={styles.loadingText}>{t("paywall.loadingOfferings")}</Text>
+        </View>
+      ) : null}
 
       <InfoCard tone="success">
         {benefits.map((benefit) => (
@@ -87,7 +163,19 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
         ))}
       </InfoCard>
 
-      <AppButton title={t("paywall.continue")} onPress={purchase} loading={loading} />
+      <AppButton
+        title={t("paywall.continue")}
+        onPress={purchase}
+        loading={loading}
+        disabled={offeringsLoading || restoring}
+      />
+      <AppButton
+        title={t("paywall.restore")}
+        variant="secondary"
+        onPress={restore}
+        loading={restoring}
+        disabled={offeringsLoading || loading}
+      />
       <AppButton title={t("paywall.later")} variant="ghost" onPress={() => navigation.navigate("MainTabs", { screen: "MyWallet" })} />
     </Screen>
   );
@@ -129,6 +217,17 @@ const styles = StyleSheet.create({
   },
   planList: {
     gap: spacing.sm
+  },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  loadingText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: "700"
   },
   plan: {
     backgroundColor: colors.surface,

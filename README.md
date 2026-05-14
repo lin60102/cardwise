@@ -36,7 +36,7 @@ cardwise/
 - PostgreSQL with Prisma ORM
 - Expo SQLite for the on-device credit card catalog cache
 - Sign in with Apple via `expo-apple-authentication`
-- RevenueCat placeholder via `react-native-purchases`
+- RevenueCat subscriptions via `react-native-purchases`
 - AdMob placeholder via `react-native-google-mobile-ads`
 - Vitest tests for recommendation logic
 
@@ -103,6 +103,10 @@ Set these environment variables before building:
 ```bash
 EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=
 EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=
+EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID=premium
+REVENUECAT_SECRET_API_KEY=
+REVENUECAT_ENTITLEMENT_ID=premium
+REVENUECAT_WEBHOOK_SECRET=
 APPLE_CLIENT_ID=com.cardwise.app
 EXPO_PUBLIC_ADMOB_USE_TEST_ADS=true
 EXPO_PUBLIC_ADMOB_IOS_APP_ID=
@@ -114,6 +118,14 @@ EXPO_PUBLIC_ADMOB_ANDROID_BANNER_AD_UNIT_ID=
 Keep `EXPO_PUBLIC_ADMOB_USE_TEST_ADS=true` while developing. Real ads require setting the native AdMob App IDs and banner ad unit IDs above, then rebuilding the native development build.
 
 For Apple Sign In, `APPLE_CLIENT_ID` should match the iOS bundle identifier configured in `apps/mobile/app.config.js` unless you intentionally use a different Apple Services ID.
+
+## RevenueCat Setup
+
+Create iOS and Android apps in RevenueCat, then connect the matching App Store Connect and Google Play products. CardWise expects a `premium` entitlement and a current offering with Monthly and Annual packages, for example `cardwise_premium_monthly` at `$2.99` and `cardwise_premium_yearly` at `$24.99`.
+
+The mobile app uses the platform public SDK keys (`EXPO_PUBLIC_REVENUECAT_IOS_API_KEY`, `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY`) to fetch offerings, purchase packages, and restore purchases. The API uses `REVENUECAT_SECRET_API_KEY` to verify the authenticated user's RevenueCat subscriber record before updating the local `Subscription` row. Set `REVENUECAT_WEBHOOK_SECRET` if you enable signed RevenueCat webhooks.
+
+RevenueCat native purchases require an Expo development build or production build. Expo Go can preview most of the app, but it cannot complete purchases.
 
 ## API Endpoints
 
@@ -128,6 +140,7 @@ For Apple Sign In, `APPLE_CLIENT_ID` should match the iOS bundle identifier conf
 - `DELETE /user/cards/:id`
 - `POST /recommendations/best-card`
 - `GET /subscription/status`
+- `POST /subscription/revenuecat/sync`
 - `POST /subscription/webhook/revenuecat`
 
 Authenticated endpoints expect:

@@ -18,6 +18,7 @@ interface AuthContextValue {
   completeOnboarding: () => Promise<void>;
   refreshSubscription: () => Promise<void>;
   redeemPromoCode: (code: string) => Promise<void>;
+  syncRevenueCatSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -120,6 +121,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const status = await api.redeemPromoCode(code);
+        const nextUser = { ...user, plan: status.plan };
+        setUser(nextUser);
+        await storage.setItem(storageKeys.authUser, JSON.stringify(nextUser));
+      },
+      syncRevenueCatSubscription: async () => {
+        if (!token || !user) {
+          return;
+        }
+
+        const status = await api.syncRevenueCatSubscription();
         const nextUser = { ...user, plan: status.plan };
         setUser(nextUser);
         await storage.setItem(storageKeys.authUser, JSON.stringify(nextUser));
