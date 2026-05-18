@@ -11,7 +11,13 @@ module.exports = {
     orientation: "portrait",
     scheme: "cardwise",
     userInterfaceStyle: "automatic",
+    icon: "./assets/images/kensa-app-icon.png",
     assetBundlePatterns: ["assets/images/*"],
+    splash: {
+      image: "./assets/images/kensa-splash.png",
+      resizeMode: "contain",
+      backgroundColor: "#F7F6F2"
+    },
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.cardwise.app",
@@ -21,7 +27,11 @@ module.exports = {
       }
     },
     android: {
-      package: "com.cardwise.app"
+      package: "com.cardwise.app",
+      adaptiveIcon: {
+        foregroundImage: "./assets/images/kensa-app-icon.png",
+        backgroundColor: "#F7F6F2"
+      }
     },
     plugins: ["expo-font", "expo-sqlite", "expo-apple-authentication", "expo-secure-store"],
     extra: {
