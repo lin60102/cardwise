@@ -7,12 +7,25 @@
     },
     "ios": {
       "bundleIdentifier": "com.kensa.cardwise",
+      "supportsTablet": true,
+      "usesAppleSignIn": true,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleAllowMixedLocalizations": true
       }
     },
+    "android": {
+      "package": "com.cardwise.app"
+    },
     "plugins": [
-      "expo-sqlite"
+      "expo-font",
+      "expo-sqlite",
+      "expo-apple-authentication",
+      "expo-secure-store"
     ]
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-3940256099942544~3347511713",
+    "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
   }
 }

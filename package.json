@@ -14,6 +14,7 @@
     "build": "npm run build -w @cardwise/shared && npm run build -w @cardwise/api && npm run typecheck -w @cardwise/mobile",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck": "npm run typecheck -w @cardwise/mobile",
     "test": "npm run test -w @cardwise/shared",
     "db:generate": "npm run prisma:generate -w @cardwise/api",
     "db:migrate": "npm run prisma:migrate -w @cardwise/api",
