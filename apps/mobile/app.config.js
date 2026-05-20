@@ -20,7 +20,7 @@ module.exports = {
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.cardwise.app",
+      bundleIdentifier: "com.kensa.cardwise",
       usesAppleSignIn: true,
       infoPlist: {
         CFBundleAllowMixedLocalizations: true
