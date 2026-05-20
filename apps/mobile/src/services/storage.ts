@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SecureStore from "expo-secure-store";
+import type * as SecureStore from "expo-secure-store";
 
 export const storageKeys = {
   authToken: "cardwise.authToken",
@@ -14,6 +14,22 @@ export const storageKeys = {
 };
 
 let secureStoreAvailable: boolean | undefined;
+let secureStoreModule: typeof SecureStore | null | undefined;
+
+async function getSecureStore() {
+  if (secureStoreModule !== undefined) {
+    return secureStoreModule;
+  }
+
+  try {
+    secureStoreModule = await import("expo-secure-store");
+  } catch (error) {
+    console.warn("SecureStore is not available in this runtime. Falling back to AsyncStorage.", error);
+    secureStoreModule = null;
+  }
+
+  return secureStoreModule;
+}
 
 async function canUseSecureStore() {
   if (secureStoreAvailable !== undefined) {
@@ -21,6 +37,12 @@ async function canUseSecureStore() {
   }
 
   try {
+    const SecureStore = await getSecureStore();
+    if (!SecureStore) {
+      secureStoreAvailable = false;
+      return secureStoreAvailable;
+    }
+
     secureStoreAvailable = await SecureStore.isAvailableAsync();
   } catch {
     secureStoreAvailable = false;
@@ -31,6 +53,11 @@ async function canUseSecureStore() {
 
 async function getAuthToken() {
   if (!(await canUseSecureStore())) {
+    return AsyncStorage.getItem(storageKeys.authToken);
+  }
+
+  const SecureStore = await getSecureStore();
+  if (!SecureStore) {
     return AsyncStorage.getItem(storageKeys.authToken);
   }
 
@@ -50,6 +77,12 @@ async function getAuthToken() {
 
 async function setAuthToken(value: string) {
   if (await canUseSecureStore()) {
+    const SecureStore = await getSecureStore();
+    if (!SecureStore) {
+      await AsyncStorage.setItem(storageKeys.authToken, value);
+      return;
+    }
+
     await SecureStore.setItemAsync(storageKeys.authToken, value);
     await AsyncStorage.removeItem(storageKeys.authToken);
     return;
@@ -60,7 +93,8 @@ async function setAuthToken(value: string) {
 
 async function removeAuthToken() {
   if (await canUseSecureStore()) {
-    await SecureStore.deleteItemAsync(storageKeys.authToken);
+    const SecureStore = await getSecureStore();
+    await SecureStore?.deleteItemAsync(storageKeys.authToken);
   }
 
   await AsyncStorage.removeItem(storageKeys.authToken);

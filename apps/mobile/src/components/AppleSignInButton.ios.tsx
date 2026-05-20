@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import * as AppleAuthentication from "expo-apple-authentication";
-import * as Crypto from "expo-crypto";
+import type * as AppleAuthentication from "expo-apple-authentication";
+import type * as Crypto from "expo-crypto";
 import { StyleSheet, Text, View } from "react-native";
 import { useAppTheme } from "../context/ThemeContext";
 import { spacing } from "../theme";
@@ -15,31 +15,56 @@ function isRequestCanceled(error: unknown) {
   );
 }
 
-function getDisplayName(fullName: AppleAuthentication.AppleAuthenticationFullName | null) {
+let cryptoModule: typeof Crypto | null | undefined;
+
+async function getCrypto() {
+  if (cryptoModule !== undefined) {
+    return cryptoModule;
+  }
+
+  try {
+    cryptoModule = await import("expo-crypto");
+  } catch (error) {
+    console.warn("Expo Crypto is not available in this runtime.", error);
+    cryptoModule = null;
+  }
+
+  return cryptoModule;
+}
+
+function getDisplayName(
+  appleAuthentication: typeof AppleAuthentication,
+  fullName: AppleAuthentication.AppleAuthenticationFullName | null
+) {
   if (!fullName) {
     return undefined;
   }
 
-  const formattedName = AppleAuthentication.formatFullName(fullName, "default").trim();
+  const formattedName = appleAuthentication.formatFullName(fullName, "default").trim();
   return formattedName || undefined;
 }
 
 export function AppleSignInButton({ loading, separatorLabel, onSuccess, onError }: AppleSignInButtonProps) {
   const [available, setAvailable] = useState(false);
+  const [appleAuthentication, setAppleAuthentication] = useState<typeof AppleAuthentication | null>(null);
   const { colors, mode } = useAppTheme();
 
   useEffect(() => {
     let isMounted = true;
 
-    AppleAuthentication.isAvailableAsync()
-      .then((nextAvailable) => {
+    import("expo-apple-authentication")
+      .then(async (nextAppleAuthentication) => {
+        const nextAvailable = await nextAppleAuthentication.isAvailableAsync();
         if (isMounted) {
           setAvailable(nextAvailable);
+          setAppleAuthentication(nextAvailable ? nextAppleAuthentication : null);
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.warn("Apple Authentication is not available in this runtime.", error);
         if (isMounted) {
           setAvailable(false);
+          setAppleAuthentication(null);
         }
       });
 
@@ -54,14 +79,23 @@ export function AppleSignInButton({ loading, separatorLabel, onSuccess, onError 
     }
 
     try {
-      const nonce = Crypto.randomUUID();
-      const state = Crypto.randomUUID();
-      const credential = await AppleAuthentication.signInAsync({
+      if (!appleAuthentication) {
+        return;
+      }
+
+      const CryptoModule = await getCrypto();
+      if (!CryptoModule) {
+        throw new Error("Expo Crypto is not available.");
+      }
+
+      const nonce = CryptoModule.randomUUID();
+      const state = CryptoModule.randomUUID();
+      const credential = await appleAuthentication.signInAsync({
         nonce,
         state,
         requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL
+          appleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          appleAuthentication.AppleAuthenticationScope.EMAIL
         ]
       });
 
@@ -77,7 +111,7 @@ export function AppleSignInButton({ loading, separatorLabel, onSuccess, onError 
         identityToken: credential.identityToken,
         nonce,
         user: credential.user,
-        name: getDisplayName(credential.fullName)
+        name: getDisplayName(appleAuthentication, credential.fullName)
       });
     } catch (error) {
       if (!isRequestCanceled(error)) {
@@ -86,9 +120,11 @@ export function AppleSignInButton({ loading, separatorLabel, onSuccess, onError 
     }
   }
 
-  if (!available) {
+  if (!available || !appleAuthentication) {
     return null;
   }
+
+  const AppleAuthenticationButton = appleAuthentication.AppleAuthenticationButton;
 
   return (
     <View style={[styles.container, loading && styles.disabled]}>
@@ -97,12 +133,12 @@ export function AppleSignInButton({ loading, separatorLabel, onSuccess, onError 
         <Text style={[styles.separatorText, { color: colors.muted }]}>{separatorLabel}</Text>
         <View style={[styles.line, { backgroundColor: colors.border }]} />
       </View>
-      <AppleAuthentication.AppleAuthenticationButton
-        buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+      <AppleAuthenticationButton
+        buttonType={appleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
         buttonStyle={
           mode === "dark"
-            ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-            : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+            ? appleAuthentication.AppleAuthenticationButtonStyle.WHITE
+            : appleAuthentication.AppleAuthenticationButtonStyle.BLACK
         }
         cornerRadius={8}
         style={styles.button}
