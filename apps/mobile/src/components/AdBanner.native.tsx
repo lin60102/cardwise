@@ -1,7 +1,14 @@
 import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { useAuth } from "../context/AuthContext";
 import { useAppTheme } from "../context/ThemeContext";
-import { canUseNativeAds, getBannerAdUnitId, initializeAds } from "../services/ads";
+import {
+  canUseNativeAds,
+  getBannerAdUnitId,
+  initializeAds,
+  isAdMobNativeModuleLinked,
+  isExpoGoRuntime
+} from "../services/ads";
 import { spacing } from "../theme";
 import { AdPlaceholder } from "./AdPlaceholder";
 
@@ -11,6 +18,7 @@ type BannerAdComponentProps = {
   requestOptions?: {
     requestNonPersonalizedAdsOnly?: boolean;
   };
+  onAdLoaded?: () => void;
   onAdFailedToLoad?: (error: Error) => void;
 };
 type BannerAdSizeModule = {
@@ -21,7 +29,12 @@ type BannerModule = {
   BannerAdSize: BannerAdSizeModule;
 };
 
+// TEMP DEBUG: shared prefix so the logs are easy to grep and to delete once
+// the AdMob investigation is closed.
+const DEBUG_PREFIX = "[CardWise/AdMob]";
+
 export function AdBanner() {
+  const { user } = useAuth();
   const { colors } = useAppTheme();
   const [bannerModule, setBannerModule] = useState<BannerModule | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -30,10 +43,25 @@ export function AdBanner() {
   const nativeAdsAvailable = useMemo(() => canUseNativeAds(), []);
   const adUnitId = useMemo(() => getBannerAdUnitId(), []);
 
+  // TEMP DEBUG: snapshot every gating value used to decide whether to render a real ad.
+  console.log(`${DEBUG_PREFIX} render snapshot`, {
+    userPlan: user?.plan ?? null,
+    shouldRenderAd: user?.plan === "FREE",
+    envUseTestAds: process.env.EXPO_PUBLIC_ADMOB_USE_TEST_ADS ?? null,
+    envEnableNativeAds: process.env.EXPO_PUBLIC_ENABLE_NATIVE_ADS ?? null,
+    isExpoGoRuntime: isExpoGoRuntime(),
+    isAdMobNativeModuleLinked: isAdMobNativeModuleLinked(),
+    canUseNativeAds: nativeAdsAvailable,
+    adUnitId,
+    bannerModuleLoaded: bannerModule !== null,
+    loadFailed
+  });
+
   useEffect(() => {
     let isMounted = true;
 
     if (!nativeAdsAvailable) {
+      console.log(`${DEBUG_PREFIX} skipped load: canUseNativeAds() === false`);
       return undefined;
     }
 
@@ -44,13 +72,22 @@ export function AdBanner() {
     // the placeholder instead of bubbling out and crashing the screen.
     async function loadBannerModule() {
       try {
+        console.log(`${DEBUG_PREFIX} initializeAds() begin`);
         const isReady = await initializeAds();
+        console.log(`${DEBUG_PREFIX} initializeAds() result`, { isReady });
+
         if (!isReady || !isMounted) {
           if (isMounted) setLoadFailed(true);
           return;
         }
 
+        console.log(`${DEBUG_PREFIX} dynamic import begin`);
         const mobileAds = await import("react-native-google-mobile-ads");
+        console.log(`${DEBUG_PREFIX} dynamic import success`, {
+          hasBannerAd: Boolean(mobileAds?.BannerAd),
+          hasBannerAdSize: Boolean(mobileAds?.BannerAdSize)
+        });
+
         if (!isMounted) return;
 
         setBannerModule({
@@ -58,7 +95,7 @@ export function AdBanner() {
           BannerAdSize: mobileAds.BannerAdSize
         });
       } catch (error) {
-        console.warn("Unable to render AdMob banner.", error);
+        console.warn(`${DEBUG_PREFIX} dynamic import failed`, error);
         if (isMounted) setLoadFailed(true);
       }
     }
@@ -71,6 +108,9 @@ export function AdBanner() {
   }, [nativeAdsAvailable]);
 
   if (!nativeAdsAvailable || loadFailed || !bannerModule) {
+    console.log(`${DEBUG_PREFIX} rendering placeholder`, {
+      reason: !nativeAdsAvailable ? "canUseNativeAds=false" : loadFailed ? "loadFailed" : "moduleNotReady"
+    });
     return <AdPlaceholder />;
   }
 
@@ -82,8 +122,11 @@ export function AdBanner() {
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        onAdLoaded={() => {
+          console.log(`${DEBUG_PREFIX} onAdLoaded`, { adUnitId });
+        }}
         onAdFailedToLoad={(error: Error) => {
-          console.warn("AdMob banner failed to load.", error);
+          console.warn(`${DEBUG_PREFIX} onAdFailedToLoad`, { adUnitId, error });
           setLoadFailed(true);
         }}
       />

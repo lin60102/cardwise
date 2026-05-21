@@ -15,7 +15,7 @@ export function isNativeAdRuntime() {
   return Platform.OS === "android" || Platform.OS === "ios";
 }
 
-function isExpoGoRuntime() {
+export function isExpoGoRuntime() {
   return Constants.executionEnvironment === ExecutionEnvironment.StoreClient && Constants.expoGoConfig !== null;
 }
 
