@@ -161,6 +161,153 @@ const cards = [
       { title: "Anniversary bonus points", description: "3,000 bonus points each card anniversary year.", annualValue: 45 }
     ]
   },
+  {
+    name: "Southwest Rapid Rewards Priority",
+    issuer: "Chase",
+    cardType: "personal" as const,
+    annualFee: 149,
+    rewardType: "points" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 3,
+    // TODO: verify FTF; some sources list 0% on the Priority tier — confirm against current Chase terms
+    notes: "Top-tier Southwest personal card. Includes $75 Southwest annual travel credit and four upgraded boardings/year.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "Southwest purchases", rate: 3 },
+      { category: PurchaseCategory.TRAVEL, label: "local transit, commuting, and rideshare", rate: 2 },
+      { category: PurchaseCategory.PHONE_INTERNET, label: "internet, cable, phone", rate: 2 },
+      { category: PurchaseCategory.DELIVERY, label: "select streaming services", rate: 2 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "$75 Southwest travel credit", description: "Annual statement credit toward Southwest purchases.", annualValue: 75 },
+      { title: "Anniversary bonus points", description: "7,500 bonus points each anniversary year.", annualValue: 110 }
+    ]
+  },
+  {
+    name: "Amazon Prime Visa",
+    issuer: "Chase",
+    cardType: "personal" as const,
+    annualFee: 0,
+    rewardType: "cashback" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: confirm whether Prime membership requirement should be modeled as a benefit or note
+    notes: "Chase-issued Amazon co-brand. Requires an active Amazon Prime membership for the elevated 5% rate.",
+    rewardCategories: [
+      { category: PurchaseCategory.AMAZON, label: "Amazon.com, Whole Foods, and Amazon Fresh", rate: 5 },
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 2 },
+      { category: PurchaseCategory.GAS, label: "gas stations", rate: 2 },
+      { category: PurchaseCategory.DRUGSTORES, label: "drugstores", rate: 2 },
+      { category: PurchaseCategory.TRAVEL, label: "local transit and commuting", rate: 2 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: []
+  },
+  {
+    name: "IHG One Rewards Premier",
+    issuer: "Chase",
+    cardType: "personal" as const,
+    annualFee: 99,
+    rewardType: "points" as const,
+    baseRewardRate: 3,
+    foreignTransactionFee: 0,
+    notes: "IHG hotel co-brand with very high at-property earn and an anniversary free-night certificate.",
+    rewardCategories: [
+      { category: PurchaseCategory.HOTELS, label: "IHG hotels and resorts", rate: 10 },
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 5 },
+      { category: PurchaseCategory.GAS, label: "gas stations", rate: 5 },
+      { category: PurchaseCategory.GROCERIES, label: "grocery stores", rate: 5 },
+      { category: PurchaseCategory.DELIVERY, label: "select streaming services", rate: 5 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 3 }
+    ],
+    benefits: [
+      { title: "Anniversary free night", description: "One free night at IHG properties (up to 40,000 points) annually.", annualValue: 200 },
+      { title: "IHG Platinum Elite status", description: "Complimentary Platinum Elite status while card is active.", annualValue: null }
+    ]
+  },
+  {
+    name: "IHG One Rewards Traveler",
+    issuer: "Chase",
+    cardType: "personal" as const,
+    annualFee: 0,
+    rewardType: "points" as const,
+    baseRewardRate: 2,
+    foreignTransactionFee: 0,
+    notes: "No annual fee IHG co-brand. Lower earn ceiling than the Premier but no fee.",
+    rewardCategories: [
+      { category: PurchaseCategory.HOTELS, label: "IHG hotels and resorts", rate: 5 },
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 3 },
+      { category: PurchaseCategory.GAS, label: "gas stations", rate: 3 },
+      { category: PurchaseCategory.PHONE_INTERNET, label: "monthly bill payments (utilities, internet, cable, phone)", rate: 3 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 2 }
+    ],
+    benefits: []
+  },
+  {
+    name: "Aeroplan Card",
+    issuer: "Chase",
+    cardType: "personal" as const,
+    annualFee: 95,
+    rewardType: "miles" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: confirm current Aeroplan earn structure; benefits sometimes change with each Air Canada cycle
+    notes: "Air Canada Aeroplan co-brand. Best for transferable points enthusiasts who value Star Alliance redemptions.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "Air Canada purchases", rate: 3 },
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 3 },
+      { category: PurchaseCategory.GROCERIES, label: "grocery stores", rate: 3 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "Free first checked bag", description: "Free first checked bag on Air Canada flights.", annualValue: 70 },
+      { title: "Aeroplan 25K Status", description: "Complimentary Aeroplan 25K status while card is active.", annualValue: null }
+    ]
+  },
+  {
+    name: "United Quest Card",
+    issuer: "Chase",
+    cardType: "personal" as const,
+    annualFee: 250,
+    rewardType: "miles" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    notes: "Mid-premium United co-brand. Strong everyday categories plus annual United purchase credit and award flight rebates.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "United purchases", rate: 3 },
+      { category: PurchaseCategory.TRAVEL, label: "all other travel", rate: 2 },
+      { category: PurchaseCategory.DINING, label: "restaurants (incl. eligible delivery)", rate: 2 },
+      { category: PurchaseCategory.DELIVERY, label: "select streaming services", rate: 2 },
+      { category: PurchaseCategory.GROCERIES, label: "grocery stores", rate: 2 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "$125 United purchase credit", description: "Annual statement credit toward United purchases.", annualValue: 125 },
+      { title: "Two free checked bags", description: "First and second checked bags free for cardholder and a companion.", annualValue: 280 },
+      { title: "Award flight rebate", description: "Up to 10,000 miles rebated per year on award redemptions (twice per year).", annualValue: null }
+    ]
+  },
+  {
+    name: "United Club Infinite Card",
+    issuer: "Chase",
+    cardType: "personal" as const,
+    annualFee: 525,
+    rewardType: "miles" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    notes: "Top-tier United personal card. Headline benefit is United Club membership for two travelers.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "United purchases", rate: 4 },
+      { category: PurchaseCategory.TRAVEL, label: "all other travel", rate: 2 },
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 2 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "United Club membership", description: "Complimentary United Club airport lounge membership.", annualValue: 650 },
+      { title: "Two free checked bags", description: "First and second checked bags free for cardholder and a companion.", annualValue: 280 },
+      { title: "Global Entry or TSA PreCheck credit", description: "Up to $120 application fee credit every 4 years.", annualValue: 30 }
+    ]
+  },
 
   // ─── AMERICAN EXPRESS PERSONAL ───────────────────────────────────────────────
   {
@@ -325,6 +472,135 @@ const cards = [
       { title: "Marriott Platinum Elite status", description: "Complimentary Marriott Bonvoy Platinum Elite status.", annualValue: null }
     ]
   },
+  {
+    name: "American Express Green Card",
+    issuer: "American Express",
+    cardType: "personal" as const,
+    annualFee: 150,
+    rewardType: "points" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: verify the LoungeBuddy credit status — the underlying service has been retired/restructured
+    notes: "Mid-tier Membership Rewards card with broad 3x earn across travel, transit, and dining worldwide.",
+    rewardCategories: [
+      { category: PurchaseCategory.DINING, label: "restaurants worldwide (incl. takeout/delivery in the U.S.)", rate: 3 },
+      { category: PurchaseCategory.TRAVEL, label: "travel and transit worldwide", rate: 3 },
+      { category: PurchaseCategory.HOTELS, label: "hotels and vacation rentals", rate: 3 },
+      { category: PurchaseCategory.FLIGHTS, label: "flights, cruises, and rail", rate: 3 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "CLEAR Plus credit", description: "Annual statement credit toward CLEAR Plus membership.", annualValue: 189 }
+    ]
+  },
+  {
+    name: "American Express Platinum Card from Charles Schwab",
+    issuer: "American Express",
+    cardType: "personal" as const,
+    annualFee: 695,
+    rewardType: "points" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: verify current Schwab redemption rate (historically 1.1¢ per MR point into a Schwab brokerage account)
+    notes: "Co-branded with Charles Schwab. Same earn as the consumer Platinum but Membership Rewards can be cashed out at an elevated rate into a linked Schwab brokerage account.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "flights booked direct or through Amex Travel", rate: 5 },
+      { category: PurchaseCategory.HOTELS, label: "prepaid hotels booked through Amex Travel", rate: 5 },
+      { category: PurchaseCategory.TRAVEL, label: "eligible travel", rate: 1 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "Schwab brokerage cash-out", description: "Redeem Membership Rewards points into a Schwab brokerage account at an elevated rate.", annualValue: null },
+      { title: "Airline fee credit", description: "Selected airline incidental statement credit.", annualValue: 200 },
+      { title: "Hotel credit", description: "Prepaid Fine Hotels + Resorts or Hotel Collection credit.", annualValue: 200 }
+    ]
+  },
+  {
+    name: "Delta SkyMiles Platinum American Express Card",
+    issuer: "American Express",
+    cardType: "personal" as const,
+    annualFee: 350,
+    rewardType: "miles" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    notes: "Mid-tier Delta card. Annual companion certificate (domestic main cabin) is the headline value.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "Delta purchases", rate: 3 },
+      { category: PurchaseCategory.HOTELS, label: "hotels purchased directly with the hotel", rate: 3 },
+      { category: PurchaseCategory.DINING, label: "restaurants worldwide", rate: 2 },
+      { category: PurchaseCategory.GROCERIES, label: "U.S. supermarkets", rate: 2 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "Annual companion certificate", description: "Domestic main cabin round-trip companion certificate each anniversary (taxes/fees due).", annualValue: 250 },
+      { title: "First checked bag free", description: "Free first checked bag for cardholder and up to 8 companions.", annualValue: 140 }
+    ]
+  },
+  {
+    name: "Delta SkyMiles Reserve American Express Card",
+    issuer: "American Express",
+    cardType: "personal" as const,
+    annualFee: 650,
+    rewardType: "miles" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: confirm Sky Club access terms — Delta restricted lounge access for cardholders in 2024
+    notes: "Premium Delta co-brand. Delta Sky Club access (with current visit caps) and an annual companion certificate.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "Delta purchases", rate: 3 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "Delta Sky Club access", description: "Complimentary Sky Club access when flying Delta (subject to visit caps).", annualValue: 600 },
+      { title: "Annual companion certificate", description: "Round-trip companion certificate each anniversary.", annualValue: 400 },
+      { title: "First checked bag free", description: "Free first checked bag for cardholder and up to 8 companions.", annualValue: 140 }
+    ]
+  },
+  {
+    name: "Hilton Honors Aspire Card from American Express",
+    issuer: "American Express",
+    cardType: "personal" as const,
+    annualFee: 550,
+    rewardType: "points" as const,
+    baseRewardRate: 3,
+    foreignTransactionFee: 0,
+    notes: "Top-tier Hilton co-brand. Diamond status, multiple statement credits, and the highest at-property earn rate.",
+    rewardCategories: [
+      { category: PurchaseCategory.HOTELS, label: "Hilton portfolio hotels", rate: 14 },
+      { category: PurchaseCategory.DINING, label: "U.S. restaurants and worldwide takeout/delivery", rate: 7 },
+      { category: PurchaseCategory.FLIGHTS, label: "flights booked directly with airlines or via Amex Travel", rate: 7 },
+      { category: PurchaseCategory.TRAVEL, label: "car rentals booked directly", rate: 7 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 3 }
+    ],
+    benefits: [
+      { title: "Annual free night reward", description: "One free weekend night at a Hilton property each anniversary.", annualValue: 400 },
+      { title: "Hilton resort credit", description: "Up to $400 in Hilton resort statement credits per year ($200 semi-annually).", annualValue: 400 },
+      { title: "$200 flight credit", description: "Up to $200 in flight credits ($50 quarterly).", annualValue: 200 },
+      { title: "CLEAR Plus credit", description: "Annual statement credit toward CLEAR Plus membership.", annualValue: 189 },
+      { title: "Hilton Diamond status", description: "Complimentary Hilton Honors Diamond elite status.", annualValue: null }
+    ]
+  },
+  {
+    name: "Marriott Bonvoy Bevy American Express Card",
+    issuer: "American Express",
+    cardType: "personal" as const,
+    annualFee: 250,
+    rewardType: "points" as const,
+    baseRewardRate: 2,
+    foreignTransactionFee: 0,
+    // TODO: confirm current annual fee — Marriott Bonvoy Bevy has had several pricing iterations
+    notes: "Mid-tier Marriott Bonvoy card. Elevated dining and grocery earn alongside Marriott property earn.",
+    rewardCategories: [
+      { category: PurchaseCategory.HOTELS, label: "Marriott Bonvoy hotels", rate: 6 },
+      { category: PurchaseCategory.DINING, label: "restaurants worldwide", rate: 4 },
+      { category: PurchaseCategory.GROCERIES, label: "U.S. supermarkets", rate: 4 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 2 }
+    ],
+    benefits: [
+      { title: "Marriott Gold Elite status", description: "Complimentary Marriott Bonvoy Gold Elite status.", annualValue: null },
+      { title: "1,000 bonus points per stay", description: "Earn 1,000 bonus points on each paid stay at Marriott Bonvoy properties.", annualValue: null }
+    ]
+  },
 
   // ─── CAPITAL ONE PERSONAL ────────────────────────────────────────────────────
   {
@@ -401,6 +677,41 @@ const cards = [
     ],
     benefits: []
   },
+  {
+    name: "Capital One VentureOne",
+    issuer: "Capital One",
+    cardType: "personal" as const,
+    annualFee: 0,
+    rewardType: "miles" as const,
+    baseRewardRate: 1.25,
+    foreignTransactionFee: 0,
+    notes: "Entry-level travel miles card. 1.25x miles on everything with no annual fee or foreign transaction fee.",
+    rewardCategories: [
+      { category: PurchaseCategory.HOTELS, label: "hotels and rental cars through Capital One Travel", rate: 5 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1.25 }
+    ],
+    benefits: []
+  },
+  {
+    name: "Capital One Savor",
+    issuer: "Capital One",
+    cardType: "personal" as const,
+    annualFee: 95,
+    rewardType: "cashback" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: Capital One renamed SavorOne to "Savor" with $0 AF in late 2024; the legacy $95-AF Savor is closed to new applicants.
+    // Modeled here as the historical $95 AF product because that is what the points-and-miles community references.
+    notes: "Historical $95 AF version of the Capital One Savor. Higher dining/entertainment earn than SavorOne but with an annual fee.",
+    rewardCategories: [
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 4 },
+      { category: PurchaseCategory.DELIVERY, label: "entertainment and popular streaming services", rate: 4 },
+      { category: PurchaseCategory.GROCERIES, label: "grocery stores (excluding superstores)", rate: 3 },
+      { category: PurchaseCategory.HOTELS, label: "hotels and rental cars through Capital One Travel", rate: 5 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: []
+  },
 
   // ─── CITI PERSONAL ───────────────────────────────────────────────────────────
   {
@@ -473,6 +784,64 @@ const cards = [
     ],
     benefits: []
   },
+  {
+    name: "Costco Anywhere Visa by Citi",
+    issuer: "Citi",
+    cardType: "personal" as const,
+    annualFee: 0,
+    rewardType: "cashback" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: rewards are issued once annually as a Costco certificate, not statement credit — confirm if app needs to surface this constraint
+    notes: "Costco's exclusive credit card. Requires an active Costco membership. Rewards are paid out annually as a Costco certificate.",
+    rewardCategories: [
+      { category: PurchaseCategory.GAS, label: "gas and EV charging worldwide (incl. Costco gas)", rate: 4, capAmount: 7000, capPeriod: "annual" },
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 3 },
+      { category: PurchaseCategory.TRAVEL, label: "eligible travel purchases (incl. Costco Travel)", rate: 3 },
+      { category: PurchaseCategory.COSTCO, label: "Costco and Costco.com purchases", rate: 2 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: []
+  },
+  {
+    name: "Citi AAdvantage Platinum Select World Elite Mastercard",
+    issuer: "Citi",
+    cardType: "personal" as const,
+    annualFee: 99,
+    rewardType: "miles" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    notes: "Entry American Airlines co-brand. Annual fee waived first year. Includes free first checked bag and preferred boarding.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "American Airlines purchases", rate: 2 },
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 2 },
+      { category: PurchaseCategory.GAS, label: "gas stations", rate: 2 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "Free first checked bag", description: "Free first checked bag on domestic American Airlines flights.", annualValue: 70 },
+      { title: "Preferred boarding", description: "Group 5 boarding on American Airlines flights.", annualValue: null }
+    ]
+  },
+  {
+    name: "Citi AAdvantage Executive World Elite Mastercard",
+    issuer: "Citi",
+    cardType: "personal" as const,
+    annualFee: 595,
+    rewardType: "miles" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: 2024 refresh changed earn structure; confirm whether 4x AA still applies and any added bonus categories
+    notes: "Premium American Airlines co-brand. Headline benefit is Admirals Club membership for the primary cardholder.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "American Airlines purchases", rate: 4 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "Admirals Club membership", description: "Full Admirals Club membership for the primary cardholder.", annualValue: 850 },
+      { title: "Global Entry or TSA PreCheck credit", description: "Up to $120 application fee credit every 4 years.", annualValue: 30 }
+    ]
+  },
 
   // ─── WELLS FARGO PERSONAL ────────────────────────────────────────────────────
   {
@@ -529,6 +898,27 @@ const cards = [
     ],
     benefits: [
       { title: "$50 annual airline credit", description: "Statement credit for airline incidental purchases.", annualValue: 50 }
+    ]
+  },
+  {
+    name: "Bilt Mastercard",
+    issuer: "Wells Fargo",
+    cardType: "personal" as const,
+    annualFee: 0,
+    rewardType: "points" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: cardholder must make 5 transactions per statement cycle for any points to post — represent this rule in product copy
+    // TODO: 1x rent earn capped at 100,000 points/year; modeled here as GENERAL_PURCHASE (no RENT category in schema)
+    notes: "The points-and-miles favorite for renters. Earns transferable Bilt Points on rent (no transaction fee) with strong dining and travel categories.",
+    rewardCategories: [
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 3 },
+      { category: PurchaseCategory.TRAVEL, label: "travel booked through Bilt", rate: 2 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "rent payments and all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "Rent Day double points", description: "Earn double points (excluding rent) on the 1st of each month, up to 10,000 bonus points.", annualValue: null },
+      { title: "No-fee rent payments", description: "Pay rent by card with no transaction fee.", annualValue: null }
     ]
   },
 
@@ -639,6 +1029,27 @@ const cards = [
       { title: "Global Entry or TSA PreCheck credit", description: "Up to $100 application fee credit.", annualValue: 25 }
     ]
   },
+  {
+    name: "Alaska Airlines Visa Signature",
+    issuer: "Bank of America",
+    cardType: "personal" as const,
+    annualFee: 95,
+    rewardType: "miles" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    notes: "Alaska Airlines co-brand. Famous for the Alaska Companion Fare each anniversary year.",
+    rewardCategories: [
+      { category: PurchaseCategory.FLIGHTS, label: "Alaska Airlines purchases", rate: 3 },
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 2 },
+      { category: PurchaseCategory.GROCERIES, label: "grocery stores", rate: 2 },
+      { category: PurchaseCategory.GAS, label: "gas stations", rate: 2 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "Alaska Companion Fare", description: "Annual Companion Fare from $122 ($99 fare + taxes/fees from $23) after meeting the spend requirement.", annualValue: 250 },
+      { title: "Free first checked bag", description: "Free first checked bag for cardholder and up to 6 companions on the same reservation.", annualValue: 60 }
+    ]
+  },
 
   // ─── U.S. BANK PERSONAL ──────────────────────────────────────────────────────
   {
@@ -722,6 +1133,28 @@ const cards = [
     benefits: [
       { title: "Annual bonus points", description: "5,000 bonus points each account anniversary.", annualValue: 70 },
       { title: "10% points rebate", description: "10% of points back when redeeming for JetBlue flights.", annualValue: null }
+    ]
+  },
+  {
+    name: "Wyndham Rewards Earner Plus Card",
+    issuer: "Barclays",
+    cardType: "personal" as const,
+    annualFee: 75,
+    rewardType: "points" as const,
+    baseRewardRate: 1,
+    foreignTransactionFee: 0,
+    // TODO: confirm 0% FTF — some Barclays Wyndham products historically charged FTF
+    notes: "Mid-tier Wyndham co-brand. Strong earn at Wyndham hotels and gas stations plus automatic Diamond status.",
+    rewardCategories: [
+      { category: PurchaseCategory.HOTELS, label: "Wyndham hotels and resorts", rate: 6 },
+      { category: PurchaseCategory.GAS, label: "gas stations", rate: 6 },
+      { category: PurchaseCategory.DINING, label: "restaurants", rate: 4 },
+      { category: PurchaseCategory.GROCERIES, label: "grocery stores (excluding superstores)", rate: 4 },
+      { category: PurchaseCategory.GENERAL_PURCHASE, label: "all other purchases", rate: 1 }
+    ],
+    benefits: [
+      { title: "Anniversary bonus points", description: "7,500 bonus Wyndham Rewards points each account anniversary.", annualValue: null },
+      { title: "Wyndham Diamond status", description: "Automatic Wyndham Rewards Diamond status while card is active.", annualValue: null }
     ]
   },
 
