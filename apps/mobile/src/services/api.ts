@@ -15,6 +15,7 @@ import {
 } from "./localCardCache";
 import { getApiAuthToken } from "./authTokenState";
 import { storage, storageKeys } from "./storage";
+import { withRetry } from "../utils/withRetry";
 
 const configuredUrl =
   process.env.EXPO_PUBLIC_API_URL || Constants.expoConfig?.extra?.apiUrl || "http://localhost:4000";
@@ -122,20 +123,26 @@ export interface WalletCard {
 
 export const api = {
   register: (payload: { email: string; password: string; name?: string }) =>
-    request<AuthResponse>("/auth/register", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    }),
+    withRetry(() =>
+      request<AuthResponse>("/auth/register", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      })
+    ),
   login: (payload: { email: string; password: string }) =>
-    request<AuthResponse>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    }),
+    withRetry(() =>
+      request<AuthResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      })
+    ),
   signInWithApple: (payload: AppleSignInPayload) =>
-    request<AuthResponse>("/auth/apple", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    }),
+    withRetry(() =>
+      request<AuthResponse>("/auth/apple", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      })
+    ),
   listCards: async () => {
     if (await isDemoSession()) {
       return { cards: await listCachedCards() };
@@ -190,7 +197,7 @@ export const api = {
       return { cards: await getDemoWalletCards() };
     }
 
-    return request<{ cards: WalletCard[] }>("/user/cards");
+    return withRetry(() => request<{ cards: WalletCard[] }>("/user/cards"));
   },
   addWalletCard: async (cardId: string) => {
     if (await isDemoSession()) {
