@@ -35,7 +35,7 @@ module.exports = {
     },
     plugins: ["expo-font", "expo-sqlite", "expo-apple-authentication", "expo-secure-store"],
     extra: {
-      apiUrl: "http://localhost:4000"
+      apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://cardwise-jvec.onrender.com"
     }
   },
   "react-native-google-mobile-ads": {
