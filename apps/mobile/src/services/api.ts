@@ -23,6 +23,14 @@ const configuredUrl =
 export const API_URL = String(configuredUrl).replace(/\/$/, "");
 export const DEMO_TOKEN = "__cardwise_demo_token__";
 
+/**
+ * Default network timeout for every API request. Without this, a stalled
+ * connection (server reachable but unresponsive) would hang screen loaders
+ * indefinitely. 12s is generous enough for slow mobile networks but short
+ * enough to surface a real failure before the user gives up.
+ */
+const REQUEST_TIMEOUT_MS = 12000;
+
 interface ApiErrorBody {
   error?: {
     code?: string;
@@ -49,27 +57,35 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  if (!response.ok) {
-    let body: ApiErrorBody = {};
-    try {
-      body = (await response.json()) as ApiErrorBody;
-    } catch {
-      body = {};
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      let body: ApiErrorBody = {};
+      try {
+        body = (await response.json()) as ApiErrorBody;
+      } catch {
+        body = {};
+      }
+
+      throw new ApiError(body.error?.message ?? "Request failed.", response.status, body.error?.code);
     }
 
-    throw new ApiError(body.error?.message ?? "Request failed.", response.status, body.error?.code);
-  }
+    if (response.status === 204) {
+      return undefined as T;
+    }
 
-  if (response.status === 204) {
-    return undefined as T;
+    return (await response.json()) as T;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return (await response.json()) as T;
 }
 
 async function isDemoSession() {

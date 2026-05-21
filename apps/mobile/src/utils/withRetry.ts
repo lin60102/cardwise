@@ -1,16 +1,28 @@
 /**
  * Returns true for errors that are safe to retry:
- *   - TypeError  — fetch/network failure (no HTTP response was received)
- *   - status >= 500 — server-side error; the request never reached application logic
+ *   - TypeError       — fetch/network failure (no HTTP response was received)
+ *   - AbortError      — request timed out via AbortController; behaves like a network failure
+ *   - status >= 500   — server-side error; the request never reached application logic
  *
  * 4xx errors (auth failures, validation, conflicts) are NOT retried because
  * repeating the same request will produce the same rejection.
  *
- * Intentionally duck-types `.status` instead of importing ApiError to avoid a
- * circular dependency with api.ts.
+ * Intentionally duck-types `.status` and `.name` instead of importing ApiError
+ * or DOMException to avoid a circular dependency with api.ts and to stay
+ * runtime-agnostic (React Native's AbortError shape is not strictly a DOMException).
  */
+function hasErrorName(error: unknown, expected: string): boolean {
+  return (
+    error !== null &&
+    typeof error === "object" &&
+    "name" in error &&
+    (error as { name: unknown }).name === expected
+  );
+}
+
 export function isRetryableError(error: unknown): boolean {
   if (error instanceof TypeError) return true;
+  if (hasErrorName(error, "AbortError")) return true;
 
   if (error !== null && typeof error === "object" && "status" in error) {
     const { status } = error as { status: unknown };

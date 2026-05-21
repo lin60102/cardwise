@@ -12,9 +12,20 @@ class StubApiError extends Error {
   }
 }
 
+/** AbortError stand-in. RN's abort error has `name === "AbortError"`. */
+function makeAbortError() {
+  const err = new Error("The operation was aborted.");
+  err.name = "AbortError";
+  return err;
+}
+
 describe("isRetryableError", () => {
   it("treats a TypeError as retryable (network / fetch failure)", () => {
     expect(isRetryableError(new TypeError("Network request failed"))).toBe(true);
+  });
+
+  it("treats an AbortError as retryable (request timeout)", () => {
+    expect(isRetryableError(makeAbortError())).toBe(true);
   });
 
   it("treats a 500 status as retryable", () => {
@@ -61,6 +72,13 @@ describe("withRetry", () => {
       .fn()
       .mockRejectedValueOnce(new TypeError("Network request failed"))
       .mockResolvedValue("recovered");
+
+    await expect(withRetry(fn)).resolves.toBe("recovered");
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries once and resolves when the first attempt aborts (timeout)", async () => {
+    const fn = vi.fn().mockRejectedValueOnce(makeAbortError()).mockResolvedValue("recovered");
 
     await expect(withRetry(fn)).resolves.toBe("recovered");
     expect(fn).toHaveBeenCalledTimes(2);

@@ -1,9 +1,14 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { api, DEMO_TOKEN, type AppleSignInPayload, type AuthUser } from "../services/api";
+import { ApiError, api, DEMO_TOKEN, type AppleSignInPayload, type AuthUser } from "../services/api";
 import { refreshApiAuthToken, setApiAuthToken } from "../services/authTokenState";
 import { ensureLocalCardCacheSeeded } from "../services/localCardCache";
 import { configureRevenueCat } from "../services/revenueCat";
 import { storage, storageKeys } from "../services/storage";
+
+/** True for any error that signals the stored token is no longer valid. */
+function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
 
 interface AuthContextValue {
   token: string | null;
@@ -30,32 +35,109 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isBooting, setIsBooting] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
+    /**
+     * Wipes every persisted scrap of the session. Used when:
+     *   - The keychain token survived an iOS uninstall but the cached user JSON did not.
+     *   - The API responds 401 to our validation probe (token expired/invalidated server-side).
+     * After this runs the React state is null and `RootNavigator` routes to LoginRegister.
+     */
+    async function clearStoredSession() {
+      setApiAuthToken(null);
+      setToken(null);
+      setUser(null);
+      await Promise.all([
+        storage.removeItem(storageKeys.authToken),
+        storage.removeItem(storageKeys.authUser)
+      ]);
+    }
+
     async function bootstrap() {
       try {
         await ensureLocalCardCacheSeeded();
 
-        const [storedToken, storedUser, storedOnboarded] = await Promise.all([
+        const [storedToken, storedUserRaw, storedOnboarded] = await Promise.all([
           refreshApiAuthToken(() => storage.getItem(storageKeys.authToken)),
           storage.getItem(storageKeys.authUser),
           storage.getItem(storageKeys.hasOnboarded)
         ]);
 
-        setToken(storedToken);
-        setUser(storedUser ? (JSON.parse(storedUser) as AuthUser) : null);
+        if (cancelled) return;
+
         setHasOnboarded(storedOnboarded === "true");
 
-        if (storedToken && storedUser) {
-          const parsedUser = JSON.parse(storedUser) as AuthUser;
-          await configureRevenueCat(parsedUser.id);
+        const storedUser: AuthUser | null = storedUserRaw
+          ? (JSON.parse(storedUserRaw) as AuthUser)
+          : null;
+
+        // Case A: no token at all → unauthenticated, nothing to validate.
+        if (!storedToken) {
+          return;
+        }
+
+        // Case B: demo token → never hits the backend; trust local user data.
+        // If the user JSON is missing the demo session is corrupt, treat as logged out.
+        if (storedToken === DEMO_TOKEN) {
+          if (storedUser) {
+            setToken(storedToken);
+            setUser(storedUser);
+            await configureRevenueCat(storedUser.id);
+          } else {
+            await clearStoredSession();
+          }
+          return;
+        }
+
+        // Case C: orphaned token. iOS keychain (SecureStore) persists across app
+        // uninstalls but AsyncStorage (where the user JSON lives) does not. After a
+        // reinstall the token can survive without its companion user — treat as stale.
+        if (!storedUser) {
+          await clearStoredSession();
+          return;
+        }
+
+        // Case D: token + cached user. Validate against the server before declaring
+        // the user authenticated. Reuse the existing subscription endpoint because it
+        // already returns the canonical plan and requires a valid Bearer token.
+        try {
+          const status = await api.getSubscriptionStatus();
+          if (cancelled) return;
+
+          const validatedUser: AuthUser = { ...storedUser, plan: status.plan };
+          setToken(storedToken);
+          setUser(validatedUser);
+          await storage.setItem(storageKeys.authUser, JSON.stringify(validatedUser));
+          await configureRevenueCat(validatedUser.id);
+        } catch (validationError) {
+          if (cancelled) return;
+
+          if (isUnauthorizedError(validationError)) {
+            // Server rejected the token — purge it and start at login.
+            await clearStoredSession();
+            return;
+          }
+
+          // Network failure or timeout. Keep the cached session so the app still
+          // opens offline; routes that need the API will surface their own errors.
+          setToken(storedToken);
+          setUser(storedUser);
+          await configureRevenueCat(storedUser.id);
         }
       } catch (error) {
         console.warn("Unable to restore CardWise session.", error);
       } finally {
-        setIsBooting(false);
+        if (!cancelled) {
+          setIsBooting(false);
+        }
       }
     }
 
     void bootstrap();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function persistSession(nextToken: string, nextUser: AuthUser) {
