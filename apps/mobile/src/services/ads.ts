@@ -17,7 +17,14 @@ function isExpoGoRuntime() {
 }
 
 export function canUseNativeAds() {
-  return isNativeAdRuntime() && !isExpoGoRuntime() && process.env.EXPO_PUBLIC_ENABLE_NATIVE_ADS === "true";
+  // Native ads need iOS or Android.
+  if (!isNativeAdRuntime()) return false;
+  // Expo Go cannot load the AdMob native module — fall back to the placeholder.
+  if (isExpoGoRuntime()) return false;
+  // Opt-out kill switch. Default is enabled in development builds and EAS builds
+  // because AdMob env vars (App ID, banner unit ID) ship pre-configured.
+  if (process.env.EXPO_PUBLIC_ENABLE_NATIVE_ADS === "false") return false;
+  return true;
 }
 
 function shouldUseTestAds() {

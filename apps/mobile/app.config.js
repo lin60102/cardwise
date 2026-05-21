@@ -33,13 +33,24 @@ module.exports = {
         backgroundColor: "#F7F6F2"
       }
     },
-    plugins: ["expo-font", "expo-sqlite", "expo-apple-authentication", "expo-secure-store"],
+    plugins: [
+      "expo-font",
+      "expo-sqlite",
+      "expo-apple-authentication",
+      "expo-secure-store",
+      [
+        "react-native-google-mobile-ads",
+        {
+          // App IDs are injected into Info.plist (iOS) and AndroidManifest.xml (Android)
+          // at native build time. Test IDs fall back when real IDs are not provided so
+          // local development builds still work.
+          androidAppId: process.env.EXPO_PUBLIC_ADMOB_ANDROID_APP_ID || TEST_ADMOB_APP_IDS.android,
+          iosAppId: process.env.EXPO_PUBLIC_ADMOB_IOS_APP_ID || TEST_ADMOB_APP_IDS.ios
+        }
+      ]
+    ],
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://cardwise-jvec.onrender.com"
     }
-  },
-  "react-native-google-mobile-ads": {
-    android_app_id: process.env.EXPO_PUBLIC_ADMOB_ANDROID_APP_ID || TEST_ADMOB_APP_IDS.android,
-    ios_app_id: process.env.EXPO_PUBLIC_ADMOB_IOS_APP_ID || TEST_ADMOB_APP_IDS.ios
   }
 };
