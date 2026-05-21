@@ -25,46 +25,52 @@ export function AdBanner() {
   const { colors } = useAppTheme();
   const [bannerModule, setBannerModule] = useState<BannerModule | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  // Read once on mount. canUseNativeAds() is synchronous and stable for the
+  // session: it includes the NativeModules link probe and the env kill switch.
+  const nativeAdsAvailable = useMemo(() => canUseNativeAds(), []);
   const adUnitId = useMemo(() => getBannerAdUnitId(), []);
 
   useEffect(() => {
     let isMounted = true;
 
-    if (!canUseNativeAds()) {
+    if (!nativeAdsAvailable) {
       return undefined;
     }
 
     setLoadFailed(false);
 
-    void initializeAds()
-      .then((isReady) => {
-        if (!isReady) {
-          return null;
+    // The whole dynamic-import chain is guarded by one try/catch so any failure
+    // — initialization, module evaluation, missing native binding — flips to
+    // the placeholder instead of bubbling out and crashing the screen.
+    async function loadBannerModule() {
+      try {
+        const isReady = await initializeAds();
+        if (!isReady || !isMounted) {
+          if (isMounted) setLoadFailed(true);
+          return;
         }
 
-        return import("react-native-google-mobile-ads");
-      })
-      .then((mobileAds) => {
-        if (isMounted && mobileAds) {
-          setBannerModule({
-            BannerAd: mobileAds.BannerAd as unknown as ComponentType<BannerAdComponentProps>,
-            BannerAdSize: mobileAds.BannerAdSize
-          });
-        }
-      })
-      .catch((error) => {
+        const mobileAds = await import("react-native-google-mobile-ads");
+        if (!isMounted) return;
+
+        setBannerModule({
+          BannerAd: mobileAds.BannerAd as unknown as ComponentType<BannerAdComponentProps>,
+          BannerAdSize: mobileAds.BannerAdSize
+        });
+      } catch (error) {
         console.warn("Unable to render AdMob banner.", error);
-        if (isMounted) {
-          setLoadFailed(true);
-        }
-      });
+        if (isMounted) setLoadFailed(true);
+      }
+    }
+
+    void loadBannerModule();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [nativeAdsAvailable]);
 
-  if (!canUseNativeAds() || loadFailed || !bannerModule) {
+  if (!nativeAdsAvailable || loadFailed || !bannerModule) {
     return <AdPlaceholder />;
   }
 
