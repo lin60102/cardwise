@@ -19,12 +19,12 @@ module.exports = {
       backgroundColor: "#F7F6F2"
     },
     ios: {
-       supportsTablet: true,
-  bundleIdentifier: "com.kensa.cardwise",
-  usesAppleSignIn: true,
-  infoPlist: {
-    CFBundleAllowMixedLocalizations: true,
-    ITSAppUsesNonExemptEncryption: false
+      supportsTablet: true,
+      bundleIdentifier: "com.kensa.cardwise",
+      usesAppleSignIn: true,
+      infoPlist: {
+        CFBundleAllowMixedLocalizations: true,
+        ITSAppUsesNonExemptEncryption: false
       }
     },
     android: {
@@ -36,10 +36,10 @@ module.exports = {
     },
     plugins: ["expo-font", "expo-sqlite", "expo-apple-authentication", "expo-secure-store"],
     extra: {
-     apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://cardwise-jvec.onrender.com",
-  eas: {
-    projectId: "2afc3aba-4be7-4b9b-9214-69db4ae00a1b"
-  }
+      apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://cardwise-jvec.onrender.com",
+      eas: {
+        projectId: "2afc3aba-4be7-4b9b-9214-69db4ae00a1b"
+      }
     }
   },
   // react-native-google-mobile-ads (v13.x) does NOT ship an Expo config plugin.
