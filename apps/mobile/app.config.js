@@ -19,11 +19,12 @@ module.exports = {
       backgroundColor: "#F7F6F2"
     },
     ios: {
-      supportsTablet: true,
-      bundleIdentifier: "com.kensa.cardwise",
-      usesAppleSignIn: true,
-      infoPlist: {
-        CFBundleAllowMixedLocalizations: true
+       supportsTablet: true,
+  bundleIdentifier: "com.kensa.cardwise",
+  usesAppleSignIn: true,
+  infoPlist: {
+    CFBundleAllowMixedLocalizations: true,
+    ITSAppUsesNonExemptEncryption: false
       }
     },
     android: {
