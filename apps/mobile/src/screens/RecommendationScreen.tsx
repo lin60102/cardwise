@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import {
@@ -32,6 +32,7 @@ export function RecommendationScreen({ navigation }: ScreenProps<"Recommendation
   const [pendingCategory, setPendingCategory] = useState<PurchaseCategory | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
   const selectedCategoryLabel = categoryLabel(category);
   const loadingCategoryLabel = categoryLabel(pendingCategory ?? category);
   const resultCategoryLabel = result ? categoryLabel(result.category) : selectedCategoryLabel;
@@ -41,7 +42,15 @@ export function RecommendationScreen({ navigation }: ScreenProps<"Recommendation
     t("recommend.loading.step3")
   ];
 
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   async function recommend() {
+    if (loading) return;
+
     const requestCategory = category;
     setError(null);
     setResult(null);
@@ -54,12 +63,18 @@ export function RecommendationScreen({ navigation }: ScreenProps<"Recommendation
         category: requestCategory,
         purchaseAmount: showAmountDetails && Number.isFinite(amount) && amount > 0 ? amount : undefined
       });
-      setResult(response);
+      if (mountedRef.current) {
+        setResult(response);
+      }
     } catch {
-      setError(t("recommend.error.message"));
+      if (mountedRef.current) {
+        setError(t("recommend.error.message"));
+      }
     } finally {
-      setLoading(false);
-      setPendingCategory(null);
+      if (mountedRef.current) {
+        setLoading(false);
+        setPendingCategory(null);
+      }
     }
   }
 

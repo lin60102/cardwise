@@ -25,35 +25,52 @@ export function MyWalletScreen({ navigation }: ScreenProps<"MyWallet">) {
   const { colors: themeColors, mode } = useAppTheme();
   const [wallet, setWallet] = useState<WalletCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [removingCardId, setRemovingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const displayName = user?.name?.split(" ")[0] || user?.email?.split("@")[0] || "CardWise";
 
-  const loadWallet = useCallback(async () => {
+  const loadWallet = useCallback(async (isActive: () => boolean) => {
     setError(null);
     try {
       const response = await api.listWallet();
-      setWallet(response.cards);
+      if (isActive()) {
+        setWallet(response.cards);
+      }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Unable to load wallet.");
+      if (isActive()) {
+        setError(loadError instanceof Error ? loadError.message : "Unable to load wallet.");
+      }
     } finally {
-      setLoading(false);
+      if (isActive()) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
+      let active = true;
       setLoading(true);
-      void loadWallet();
+      void loadWallet(() => active);
+
+      return () => {
+        active = false;
+      };
     }, [loadWallet])
   );
 
   async function removeCard(walletCardId: string) {
+    if (removingCardId) return;
+
     setError(null);
+    setRemovingCardId(walletCardId);
     try {
       await api.removeWalletCard(walletCardId);
       setWallet((current) => current.filter((walletCard) => walletCard.id !== walletCardId));
     } catch (removeError) {
       setError(removeError instanceof Error ? removeError.message : "Unable to remove card.");
+    } finally {
+      setRemovingCardId(null);
     }
   }
 
@@ -147,7 +164,15 @@ export function MyWalletScreen({ navigation }: ScreenProps<"MyWallet">) {
               card={walletCard.card}
               onPress={() => navigation.navigate("CardDetail", { cardId: walletCard.card.id })}
               trailing={
-                <Pressable style={[styles.removeButton, { backgroundColor: mode === "dark" ? "#3A1F1D" : "#FFF1F0" }]} onPress={() => void removeCard(walletCard.id)}>
+                <Pressable
+                  style={[
+                    styles.removeButton,
+                    { backgroundColor: mode === "dark" ? "#3A1F1D" : "#FFF1F0" },
+                    removingCardId === walletCard.id && styles.disabledButton
+                  ]}
+                  disabled={removingCardId !== null}
+                  onPress={() => void removeCard(walletCard.id)}
+                >
                   <Feather name="x" size={18} color={themeColors.danger} />
                 </Pressable>
               }
@@ -285,5 +310,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFF1F0"
+  },
+  disabledButton: {
+    opacity: 0.5
   }
 });

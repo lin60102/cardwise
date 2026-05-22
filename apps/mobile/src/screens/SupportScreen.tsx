@@ -36,15 +36,22 @@ export function SupportScreen() {
   const formattedAmount = amount > 0 ? `$${amount.toFixed(2)}` : "$0.00";
 
   async function supportApp() {
+    if (loading) return;
+
     if (amount <= 0) {
       setMessage(t("support.invalidAmount"));
       return;
     }
 
     setLoading(true);
-    const result = await purchaseSupportPlaceholder(amount);
-    setMessage(result.success ? t("support.thanks") : t("support.placeholderMessage"));
-    setLoading(false);
+    try {
+      const result = await purchaseSupportPlaceholder(amount);
+      setMessage(result.success ? t("support.thanks") : t("support.placeholderMessage"));
+    } catch (supportError) {
+      setMessage(supportError instanceof Error ? supportError.message : t("support.placeholderMessage"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

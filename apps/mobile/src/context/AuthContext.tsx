@@ -67,9 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setHasOnboarded(storedOnboarded === "true");
 
-        const storedUser: AuthUser | null = storedUserRaw
-          ? (JSON.parse(storedUserRaw) as AuthUser)
-          : null;
+        let storedUser: AuthUser | null = null;
+        if (storedUserRaw) {
+          try {
+            storedUser = JSON.parse(storedUserRaw) as AuthUser;
+          } catch (parseError) {
+            console.warn("Stored CardWise user data is invalid; clearing session.", parseError);
+            await clearStoredSession();
+            return;
+          }
+        }
 
         // Case A: no token at all → unauthenticated, nothing to validate.
         if (!storedToken) {
@@ -126,6 +133,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.warn("Unable to restore CardWise session.", error);
+        if (!cancelled) {
+          setApiAuthToken(null);
+          setToken(null);
+          setUser(null);
+        }
       } finally {
         if (!cancelled) {
           setIsBooting(false);
@@ -181,7 +193,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setApiAuthToken(null);
         setToken(null);
         setUser(null);
-        await Promise.all([storage.removeItem(storageKeys.authToken), storage.removeItem(storageKeys.authUser)]);
+        try {
+          await Promise.all([storage.removeItem(storageKeys.authToken), storage.removeItem(storageKeys.authUser)]);
+        } catch (logoutError) {
+          console.warn("Unable to fully clear persisted CardWise session.", logoutError);
+        }
       },
       completeOnboarding: async () => {
         setHasOnboarded(true);

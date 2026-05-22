@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Screen } from "../components/Screen";
 import { AppButton } from "../components/AppButton";
+import { ErrorBanner } from "../components/ErrorBanner";
 import { InfoCard } from "../components/InfoCard";
 import { LanguageToggle } from "../components/LanguageToggle";
 import { useAuth } from "../context/AuthContext";
@@ -19,6 +21,22 @@ export function OnboardingScreen() {
   const { completeOnboarding } = useAuth();
   const { t } = useLanguage();
   const { colors: themeColors } = useAppTheme();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function finishOnboarding() {
+    if (loading) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      await completeOnboarding();
+    } catch (onboardingError) {
+      setError(onboardingError instanceof Error ? onboardingError.message : "Unable to finish onboarding.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <Screen>
@@ -38,6 +56,8 @@ export function OnboardingScreen() {
         resizeMode="contain"
       />
 
+      <ErrorBanner message={error} />
+
       <View style={styles.featureStack}>
         {features.map((feature) => (
           <InfoCard key={feature.titleKey}>
@@ -52,7 +72,7 @@ export function OnboardingScreen() {
         ))}
       </View>
 
-      <AppButton title={t("onboarding.cta")} onPress={completeOnboarding} />
+      <AppButton title={t("onboarding.cta")} onPress={() => void finishOnboarding()} loading={loading} />
     </Screen>
   );
 }

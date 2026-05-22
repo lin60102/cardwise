@@ -19,18 +19,30 @@ export function AnnualDashboardScreen({ navigation }: ScreenProps<"AnnualDashboa
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+
     async function loadWallet() {
       try {
         const response = await api.listWallet();
-        setWallet(response.cards);
+        if (active) {
+          setWallet(response.cards);
+        }
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Unable to load dashboard.");
+        if (active) {
+          setError(loadError instanceof Error ? loadError.message : "Unable to load dashboard.");
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
     void loadWallet();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const summary = useMemo(() => {

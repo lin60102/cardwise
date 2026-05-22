@@ -29,24 +29,34 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
     const timeout = setTimeout(() => {
       async function search() {
         setError(null);
         setLoading(true);
         try {
           const response = query.trim() ? await api.searchCards(query.trim()) : await api.listCards();
-          setCards(response.cards);
+          if (active) {
+            setCards(response.cards);
+          }
         } catch (searchError) {
-          setError(searchError instanceof Error ? searchError.message : "Unable to search cards.");
+          if (active) {
+            setError(searchError instanceof Error ? searchError.message : "Unable to search cards.");
+          }
         } finally {
-          setLoading(false);
+          if (active) {
+            setLoading(false);
+          }
         }
       }
 
       void search();
     }, 250);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+    };
   }, [query]);
 
   useEffect(() => {
@@ -56,6 +66,8 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
   }, [filter, showBusinessCards]);
 
   async function addCard(cardId: string) {
+    if (addingCardId) return;
+
     setError(null);
     setAddingCardId(cardId);
 
@@ -82,7 +94,12 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
     }
 
     if (nextFilter === "business" && !showBusinessCards) {
-      await setShowBusinessCards(true);
+      try {
+        await setShowBusinessCards(true);
+      } catch (settingsError) {
+        setError(settingsError instanceof Error ? settingsError.message : "Unable to update card filters.");
+        return;
+      }
     }
 
     setFilter(nextFilter);
@@ -154,7 +171,7 @@ export function AddCardsScreen({ navigation }: ScreenProps<"AddCards">) {
                 <Pressable
                   style={[styles.addButton, { backgroundColor: themeColors.primary }]}
                   onPress={() => void addCard(card.id)}
-                  disabled={addingCardId === card.id}
+                  disabled={addingCardId !== null}
                 >
                   <Text style={[styles.addText, { color: themeColors.surface }]}>{addingCardId === card.id ? "..." : t("common.add")}</Text>
                 </Pressable>

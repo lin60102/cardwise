@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppButton } from "../components/AppButton";
@@ -40,19 +40,32 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
   const [message, setMessage] = useState<string | null>(route.params?.reason ?? null);
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    let active = true;
+    mountedRef.current = true;
+
     async function loadOfferings() {
-      setOfferingsLoading(true);
-      const nextPlans = await fetchPremiumOfferings();
-      setOfferingPlans(nextPlans);
-      if (nextPlans.length === 0) {
-        setMessage((currentMessage) => currentMessage ?? t("demo.purchaseMessage"));
+      if (active) {
+        setOfferingsLoading(true);
       }
-      setOfferingsLoading(false);
+      const nextPlans = await fetchPremiumOfferings();
+      if (active) {
+        setOfferingPlans(nextPlans);
+        if (nextPlans.length === 0) {
+          setMessage((currentMessage) => currentMessage ?? t("demo.purchaseMessage"));
+        }
+        setOfferingsLoading(false);
+      }
     }
 
     void loadOfferings();
+
+    return () => {
+      active = false;
+      mountedRef.current = false;
+    };
   }, [t]);
 
   const offeringsByPlan = useMemo(
@@ -61,6 +74,8 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
   );
 
   async function purchase() {
+    if (loading || restoring) return;
+
     const revenueCatPlan = offeringsByPlan.get(selectedPlan);
     if (!revenueCatPlan) {
       setMessage(t("demo.purchaseMessage"));
@@ -72,6 +87,8 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
 
     try {
       const result = await purchasePremiumPlan(revenueCatPlan);
+      if (!mountedRef.current) return;
+
       if (!result.success) {
         setMessage(result.cancelled ? null : result.message ?? t("paywall.purchaseError"));
         return;
@@ -79,31 +96,45 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
 
       // The backend verifies RevenueCat status before unlocking server-enforced Premium gates.
       await syncRevenueCatSubscription();
+      if (!mountedRef.current) return;
       setMessage(result.isPremium ? t("paywall.purchaseSuccess") : t("paywall.syncPending"));
     } catch {
-      setMessage(t("paywall.syncError"));
+      if (mountedRef.current) {
+        setMessage(t("paywall.syncError"));
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }
 
   async function restore() {
+    if (restoring || loading) return;
+
     setRestoring(true);
     setMessage(null);
 
     try {
       const result = await restorePremiumPurchases();
+      if (!mountedRef.current) return;
+
       if (!result.success) {
         setMessage(result.message ?? t("paywall.restoreError"));
         return;
       }
 
       await syncRevenueCatSubscription();
+      if (!mountedRef.current) return;
       setMessage(result.isPremium ? t("paywall.restoreSuccess") : t("paywall.noPurchases"));
     } catch {
-      setMessage(t("paywall.syncError"));
+      if (mountedRef.current) {
+        setMessage(t("paywall.syncError"));
+      }
     } finally {
-      setRestoring(false);
+      if (mountedRef.current) {
+        setRestoring(false);
+      }
     }
   }
 

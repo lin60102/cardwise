@@ -47,6 +47,8 @@ export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+
     async function load() {
       setError(null);
       try {
@@ -54,16 +56,26 @@ export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) 
           api.listWallet(),
           storage.getItem(storageKeys.bonusTrackers)
         ]);
-        setWallet(walletResponse.cards);
-        setTrackers(storedTrackers ? (JSON.parse(storedTrackers) as BonusTrackerMap) : {});
+        if (active) {
+          setWallet(walletResponse.cards);
+          setTrackers(storedTrackers ? (JSON.parse(storedTrackers) as BonusTrackerMap) : {});
+        }
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Unable to load welcome bonus trackers.");
+        if (active) {
+          setError(loadError instanceof Error ? loadError.message : "Unable to load welcome bonus trackers.");
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
     void load();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const summary = useMemo(() => {
@@ -98,6 +110,8 @@ export function BonusTrackerScreen({ navigation }: ScreenProps<"BonusTracker">) 
   }
 
   async function saveTrackers() {
+    if (saving) return;
+
     setSaving(true);
     setError(null);
 

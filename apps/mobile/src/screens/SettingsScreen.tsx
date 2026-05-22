@@ -24,8 +24,12 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
   const [promoMessage, setPromoMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [redeemingPromo, setRedeemingPromo] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [updatingBusinessCards, setUpdatingBusinessCards] = useState(false);
 
   async function refreshPlan() {
+    if (refreshing) return;
+
     setError(null);
     setRefreshing(true);
 
@@ -39,19 +43,35 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
   }
 
   async function toggleBusinessCards() {
+    if (updatingBusinessCards) return;
+
     if (user?.plan !== "PREMIUM") {
       navigation.navigate("Paywall", { reason: t("settings.businessCardsPremium") });
       return;
     }
 
-    await setShowBusinessCards(!showBusinessCards);
+    setUpdatingBusinessCards(true);
+    setError(null);
+    try {
+      await setShowBusinessCards(!showBusinessCards);
+    } catch (settingsError) {
+      setError(settingsError instanceof Error ? settingsError.message : "Unable to update business card settings.");
+    } finally {
+      setUpdatingBusinessCards(false);
+    }
   }
 
   async function selectTheme(nextMode: ThemeMode) {
-    await setMode(nextMode);
+    try {
+      await setMode(nextMode);
+    } catch (themeError) {
+      setError(themeError instanceof Error ? themeError.message : "Unable to update theme.");
+    }
   }
 
   async function submitPromoCode() {
+    if (redeemingPromo) return;
+
     setError(null);
     setPromoMessage(null);
     setRedeemingPromo(true);
@@ -64,6 +84,20 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
       setError(promoError instanceof Error ? promoError.message : t("settings.promoError"));
     } finally {
       setRedeemingPromo(false);
+    }
+  }
+
+  async function handleLogout() {
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+    setError(null);
+    try {
+      await logout();
+    } catch (logoutError) {
+      setError(logoutError instanceof Error ? logoutError.message : "Unable to log out.");
+    } finally {
+      setLoggingOut(false);
     }
   }
 
@@ -132,6 +166,7 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
           <Switch
             value={showBusinessCards}
             onValueChange={() => void toggleBusinessCards()}
+            disabled={updatingBusinessCards}
             trackColor={{ false: themeColors.border, true: themeColors.primary }}
             thumbColor={themeColors.surface}
           />
@@ -166,7 +201,7 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
           title={t("settings.promoRedeem")}
           onPress={submitPromoCode}
           loading={redeemingPromo}
-          disabled={!promoCode.trim()}
+          disabled={!promoCode.trim() || redeemingPromo}
         />
       </InfoCard>
 
@@ -192,7 +227,7 @@ export function SettingsScreen({ navigation }: ScreenProps<"Settings">) {
         <Text style={[styles.copy, { color: themeColors.muted }]}>{t("settings.freeRulesCopy")}</Text>
       </InfoCard>
 
-      <AppButton title={t("settings.logout")} variant="danger" onPress={() => void logout()} />
+      <AppButton title={t("settings.logout")} variant="danger" onPress={() => void handleLogout()} loading={loggingOut} />
     </Screen>
   );
 }

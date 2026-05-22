@@ -29,9 +29,13 @@ type BannerModule = {
   BannerAdSize: BannerAdSizeModule;
 };
 
-// TEMP DEBUG: shared prefix so the logs are easy to grep and to delete once
-// the AdMob investigation is closed.
 const DEBUG_PREFIX = "[CardWise/AdMob]";
+
+function debugAdMob(message: string, details?: Record<string, unknown>) {
+  if (process.env.EXPO_PUBLIC_ADMOB_DEBUG === "true") {
+    console.log(`${DEBUG_PREFIX} ${message}`, details ?? {});
+  }
+}
 
 export function AdBanner() {
   const { user } = useAuth();
@@ -43,8 +47,7 @@ export function AdBanner() {
   const nativeAdsAvailable = useMemo(() => canUseNativeAds(), []);
   const adUnitId = useMemo(() => getBannerAdUnitId(), []);
 
-  // TEMP DEBUG: snapshot every gating value used to decide whether to render a real ad.
-  console.log(`${DEBUG_PREFIX} render snapshot`, {
+  debugAdMob("render snapshot", {
     userPlan: user?.plan ?? null,
     shouldRenderAd: user?.plan === "FREE",
     envUseTestAds: process.env.EXPO_PUBLIC_ADMOB_USE_TEST_ADS ?? null,
@@ -61,7 +64,7 @@ export function AdBanner() {
     let isMounted = true;
 
     if (!nativeAdsAvailable) {
-      console.log(`${DEBUG_PREFIX} skipped load: canUseNativeAds() === false`);
+      debugAdMob("skipped load: canUseNativeAds() === false");
       return undefined;
     }
 
@@ -72,18 +75,18 @@ export function AdBanner() {
     // the placeholder instead of bubbling out and crashing the screen.
     async function loadBannerModule() {
       try {
-        console.log(`${DEBUG_PREFIX} initializeAds() begin`);
+        debugAdMob("initializeAds() begin");
         const isReady = await initializeAds();
-        console.log(`${DEBUG_PREFIX} initializeAds() result`, { isReady });
+        debugAdMob("initializeAds() result", { isReady });
 
         if (!isReady || !isMounted) {
           if (isMounted) setLoadFailed(true);
           return;
         }
 
-        console.log(`${DEBUG_PREFIX} dynamic import begin`);
+        debugAdMob("dynamic import begin");
         const mobileAds = await import("react-native-google-mobile-ads");
-        console.log(`${DEBUG_PREFIX} dynamic import success`, {
+        debugAdMob("dynamic import success", {
           hasBannerAd: Boolean(mobileAds?.BannerAd),
           hasBannerAdSize: Boolean(mobileAds?.BannerAdSize)
         });
@@ -108,7 +111,7 @@ export function AdBanner() {
   }, [nativeAdsAvailable]);
 
   if (!nativeAdsAvailable || loadFailed || !bannerModule) {
-    console.log(`${DEBUG_PREFIX} rendering placeholder`, {
+    debugAdMob("rendering placeholder", {
       reason: !nativeAdsAvailable ? "canUseNativeAds=false" : loadFailed ? "loadFailed" : "moduleNotReady"
     });
     return <AdPlaceholder />;
@@ -123,7 +126,7 @@ export function AdBanner() {
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{ requestNonPersonalizedAdsOnly: true }}
         onAdLoaded={() => {
-          console.log(`${DEBUG_PREFIX} onAdLoaded`, { adUnitId });
+          debugAdMob("onAdLoaded", { adUnitId });
         }}
         onAdFailedToLoad={(error: Error) => {
           console.warn(`${DEBUG_PREFIX} onAdFailedToLoad`, { adUnitId, error });

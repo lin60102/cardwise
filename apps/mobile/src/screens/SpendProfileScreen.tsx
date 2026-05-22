@@ -62,6 +62,8 @@ export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) 
   );
 
   useEffect(() => {
+    let active = true;
+
     async function load() {
       setError(null);
       try {
@@ -69,16 +71,26 @@ export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) 
           storage.getItem(storageKeys.spendProfile),
           api.listWallet()
         ]);
-        setProfile(storedProfile ? (JSON.parse(storedProfile) as SpendProfileValues) : {});
-        setWallet(walletResponse.cards);
+        if (active) {
+          setProfile(storedProfile ? (JSON.parse(storedProfile) as SpendProfileValues) : {});
+          setWallet(walletResponse.cards);
+        }
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Unable to load spend profile.");
+        if (active) {
+          setError(loadError instanceof Error ? loadError.message : "Unable to load spend profile.");
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
     void load();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const projection = useMemo(() => {
@@ -103,6 +115,8 @@ export function SpendProfileScreen({ navigation }: ScreenProps<"SpendProfile">) 
   const totals = projection.totals;
 
   async function saveProfile() {
+    if (saving) return;
+
     setSaving(true);
     setError(null);
 
