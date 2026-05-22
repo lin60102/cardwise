@@ -1,5 +1,5 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { ApiError, api, DEMO_TOKEN, type AppleSignInPayload, type AuthUser } from "../services/api";
+import { ApiError, api, DEMO_TOKEN, type AppleSignInPayload, type AuthRequestOptions, type AuthUser } from "../services/api";
 import { refreshApiAuthToken, setApiAuthToken } from "../services/authTokenState";
 import { ensureLocalCardCacheSeeded } from "../services/localCardCache";
 import { configureRevenueCat } from "../services/revenueCat";
@@ -15,8 +15,8 @@ interface AuthContextValue {
   user: AuthUser | null;
   hasOnboarded: boolean;
   isBooting: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
+  login: (email: string, password: string, options?: AuthRequestOptions) => Promise<void>;
+  register: (email: string, password: string, name?: string, options?: AuthRequestOptions) => Promise<void>;
   loginWithApple: (payload: AppleSignInPayload) => Promise<void>;
   continueAsDemo: () => Promise<void>;
   logout: () => Promise<void>;
@@ -157,12 +157,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       hasOnboarded,
       isBooting,
-      login: async (email, password) => {
-        const response = await api.login({ email, password });
+      login: async (email, password, options) => {
+        const response = await api.login({ email, password }, options);
         await persistSession(response.token, response.user);
       },
-      register: async (email, password, name) => {
-        const response = await api.register({ email, password, name });
+      register: async (email, password, name, options) => {
+        const response = await api.register({ email, password, name }, options);
         await persistSession(response.token, response.user);
       },
       loginWithApple: async (payload) => {

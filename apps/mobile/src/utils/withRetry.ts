@@ -32,15 +32,39 @@ export function isRetryableError(error: unknown): boolean {
   return false;
 }
 
+export interface WithRetryOptions {
+  /**
+   * Called once, immediately before the second attempt, when the first attempt
+   * fails with a retryable error. Lets the UI surface a "retrying" message
+   * (e.g. while a Render Free instance cold-starts). Never called on success or
+   * on a non-retryable failure.
+   */
+  onRetry?: (error: unknown) => void;
+  /** Optional pause before the second attempt, useful for cold-starting hosts. */
+  retryDelayMs?: number;
+}
+
+function delay(ms: number) {
+  if (ms <= 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 /**
  * Calls `fn` and, if it throws a retryable error, calls it exactly once more.
  * The second attempt's result or error is returned as-is — no further retries.
  */
-export async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, options: WithRetryOptions = {}): Promise<T> {
   try {
     return await fn();
   } catch (error) {
     if (isRetryableError(error)) {
+      options.onRetry?.(error);
+      await delay(options.retryDelayMs ?? 0);
       return fn();
     }
     throw error;

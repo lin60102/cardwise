@@ -75,6 +75,7 @@ const baseTranslations: Record<"en" | "zh", Record<string, string>> = {
     "auth.error.registerGeneric": "Unable to create your account right now. Please try again.",
     "auth.error.demoGeneric": "Unable to start demo mode right now. Please try again.",
     "auth.error.appleGeneric": "Unable to sign in with Apple right now. Please try again.",
+    "auth.retry.waking": "Secure service is waking up. Trying again...",
     "auth.or": "or",
 
     "wallet.currentPlan": "Current plan",
@@ -316,6 +317,7 @@ const baseTranslations: Record<"en" | "zh", Record<string, string>> = {
     "auth.error.registerGeneric": "目前無法建立帳號，請再試一次。",
     "auth.error.demoGeneric": "目前無法啟動 Demo 模式，請再試一次。",
     "auth.error.appleGeneric": "目前無法使用 Apple 登入，請再試一次。",
+    "auth.retry.waking": "安全服務正在喚醒中，正在重試...",
     "auth.or": "或",
 
     "wallet.currentPlan": "目前方案",
@@ -557,6 +559,7 @@ const esTranslations: Record<string, string> = {
   "auth.error.registerGeneric": "No se puede crear tu cuenta ahora. Inténtalo de nuevo.",
   "auth.error.demoGeneric": "No se puede iniciar el modo demo ahora. Inténtalo de nuevo.",
   "auth.error.appleGeneric": "No se puede iniciar sesión con Apple ahora. Inténtalo de nuevo.",
+  "auth.retry.waking": "El servicio seguro se está activando. Reintentando...",
   "auth.or": "o",
 
   "wallet.currentPlan": "Plan actual",
@@ -684,6 +687,7 @@ const jaTranslations: Record<string, string> = {
   "auth.error.registerGeneric": "現在アカウントを作成できません。もう一度お試しください。",
   "auth.error.demoGeneric": "現在デモモードを開始できません。もう一度お試しください。",
   "auth.error.appleGeneric": "現在Appleでサインインできません。もう一度お試しください。",
+  "auth.retry.waking": "セキュアサービスを起動しています。再試行中...",
   "auth.or": "または",
 
   "wallet.currentPlan": "現在のプラン",

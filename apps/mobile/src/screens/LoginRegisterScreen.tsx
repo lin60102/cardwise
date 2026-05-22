@@ -28,6 +28,8 @@ export function LoginRegisterScreen() {
   const [touched, setTouched] = useState<TouchedMap>(UNTOUCHED);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // True only during the second attempt after a retryable failure (cold start).
+  const [isRetrying, setIsRetrying] = useState(false);
   const auth = useAuth();
   const { t } = useLanguage();
   const { colors: themeColors } = useAppTheme();
@@ -60,18 +62,22 @@ export function LoginRegisterScreen() {
     if (!validation.valid) return;
 
     setError(null);
+    setIsRetrying(false);
     setLoading(true);
+
+    const retryOptions = { onRetry: () => setIsRetrying(true) };
 
     try {
       if (mode === "login") {
-        await auth.login(email.trim(), password);
+        await auth.login(email.trim(), password, retryOptions);
       } else {
-        await auth.register(email.trim(), password, name.trim() || undefined);
+        await auth.register(email.trim(), password, name.trim() || undefined, retryOptions);
       }
     } catch (submitError) {
       setError(t(getAuthErrorMessageKey(submitError, mode)));
     } finally {
       setLoading(false);
+      setIsRetrying(false);
     }
   }
 
@@ -92,6 +98,7 @@ export function LoginRegisterScreen() {
   async function signInWithApple(payload: AppleSignInPayload) {
     if (loading) return;
     setError(null);
+    setIsRetrying(false);
     setLoading(true);
 
     try {
@@ -100,6 +107,7 @@ export function LoginRegisterScreen() {
       setError(t(getAuthErrorMessageKey(appleError, "apple")));
     } finally {
       setLoading(false);
+      setIsRetrying(false);
     }
   }
 
@@ -223,6 +231,11 @@ export function LoginRegisterScreen() {
             loading={loading}
             disabled={!validation.valid || loading}
           />
+          {isRetrying ? (
+            <Text style={[styles.retryNotice, { color: themeColors.muted }]} accessibilityRole="alert">
+              {t("auth.retry.waking")}
+            </Text>
+          ) : null}
           {disabledReasonKey ? (
             <Text style={[styles.disabledReason, { color: themeColors.muted }]}>
               {mode === "register"
@@ -332,6 +345,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs
   },
   disabledReason: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+    textAlign: "center",
+    paddingHorizontal: spacing.sm
+  },
+  retryNotice: {
     color: colors.muted,
     fontSize: 13,
     lineHeight: 18,

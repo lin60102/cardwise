@@ -36,6 +36,11 @@ describe("isRetryableError", () => {
     expect(isRetryableError(new StubApiError("Service Unavailable", 503))).toBe(true);
   });
 
+  it("treats 502 and 504 statuses as retryable gateway failures", () => {
+    expect(isRetryableError(new StubApiError("Bad Gateway", 502))).toBe(true);
+    expect(isRetryableError(new StubApiError("Gateway Timeout", 504))).toBe(true);
+  });
+
   it("does not treat a 400 status as retryable", () => {
     expect(isRetryableError(new StubApiError("Bad Request", 400))).toBe(false);
   });
@@ -135,5 +140,57 @@ describe("withRetry", () => {
 
     await expect(withRetry(fn)).rejects.toBe(error);
     expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onRetry exactly once before the second attempt when retrying", async () => {
+    const retryError = new TypeError("Network request failed");
+    const fn = vi.fn().mockRejectedValueOnce(retryError).mockResolvedValue("recovered");
+    const onRetry = vi.fn();
+
+    await expect(withRetry(fn, { onRetry })).resolves.toBe("recovered");
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(onRetry).toHaveBeenCalledWith(retryError);
+  });
+
+  it("waits for the configured retry delay before the second attempt", async () => {
+    vi.useFakeTimers();
+    try {
+      const fn = vi
+        .fn()
+        .mockRejectedValueOnce(new StubApiError("Service Unavailable", 503))
+        .mockResolvedValue("recovered");
+      const onRetry = vi.fn();
+
+      const result = withRetry(fn, { onRetry, retryDelayMs: 1500 });
+
+      await vi.advanceTimersByTimeAsync(0);
+      expect(onRetry).toHaveBeenCalledTimes(1);
+      expect(fn).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(1499);
+      expect(fn).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(1);
+      await expect(result).resolves.toBe("recovered");
+      expect(fn).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not call onRetry when the first attempt succeeds", async () => {
+    const fn = vi.fn().mockResolvedValue("ok");
+    const onRetry = vi.fn();
+
+    await expect(withRetry(fn, { onRetry })).resolves.toBe("ok");
+    expect(onRetry).not.toHaveBeenCalled();
+  });
+
+  it("does not call onRetry for a non-retryable error", async () => {
+    const fn = vi.fn().mockRejectedValue(new StubApiError("Unauthorized", 401));
+    const onRetry = vi.fn();
+
+    await expect(withRetry(fn, { onRetry })).rejects.toBeInstanceOf(StubApiError);
+    expect(onRetry).not.toHaveBeenCalled();
   });
 });

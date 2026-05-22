@@ -31,6 +31,26 @@ export const DEMO_TOKEN = "__cardwise_demo_token__";
  */
 const REQUEST_TIMEOUT_MS = 12000;
 
+/**
+ * Longer timeout for login/register only. The API runs on Render Free, which
+ * spins the instance down after inactivity and can take a while to cold-start.
+ * The first login/register of a session frequently hits that wake-up, so we
+ * give it more room than regular app requests.
+ */
+const LOGIN_REGISTER_REQUEST_TIMEOUT_MS = 35000;
+const LOGIN_REGISTER_RETRY_DELAY_MS = 1500;
+
+interface RequestConfig {
+  /** Overrides REQUEST_TIMEOUT_MS for this single call. */
+  timeoutMs?: number;
+}
+
+/** Options accepted by auth calls so the UI can react to a retry. */
+export interface AuthRequestOptions {
+  /** Invoked once when the first attempt fails and a retry is about to start. */
+  onRetry?: () => void;
+}
+
 interface ApiErrorBody {
   error?: {
     code?: string;
@@ -48,7 +68,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}, config: RequestConfig = {}): Promise<T> {
   const token = await getApiAuthToken(() => storage.getItem(storageKeys.authToken));
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
@@ -58,7 +78,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), config.timeoutMs ?? REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${API_URL}${path}`, {
@@ -138,27 +158,37 @@ export interface WalletCard {
 }
 
 export const api = {
-  register: (payload: { email: string; password: string; name?: string }) =>
-    withRetry(() =>
-      request<AuthResponse>("/auth/register", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      })
+  register: (payload: { email: string; password: string; name?: string }, options: AuthRequestOptions = {}) =>
+    withRetry(
+      () =>
+        request<AuthResponse>(
+          "/auth/register",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          { timeoutMs: LOGIN_REGISTER_REQUEST_TIMEOUT_MS }
+        ),
+      { onRetry: options.onRetry, retryDelayMs: LOGIN_REGISTER_RETRY_DELAY_MS }
     ),
-  login: (payload: { email: string; password: string }) =>
-    withRetry(() =>
-      request<AuthResponse>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      })
+  login: (payload: { email: string; password: string }, options: AuthRequestOptions = {}) =>
+    withRetry(
+      () =>
+        request<AuthResponse>(
+          "/auth/login",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          { timeoutMs: LOGIN_REGISTER_REQUEST_TIMEOUT_MS }
+        ),
+      { onRetry: options.onRetry, retryDelayMs: LOGIN_REGISTER_RETRY_DELAY_MS }
     ),
   signInWithApple: (payload: AppleSignInPayload) =>
-    withRetry(() =>
-      request<AuthResponse>("/auth/apple", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      })
-    ),
+    request<AuthResponse>("/auth/apple", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
   listCards: async () => {
     if (await isDemoSession()) {
       return { cards: await listCachedCards() };
