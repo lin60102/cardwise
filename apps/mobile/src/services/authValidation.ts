@@ -85,3 +85,19 @@ export function validateAuthForm(input: {
     name
   };
 }
+
+export function getPrimaryAuthValidationMessageKey(validation: FormValidationResult) {
+  if (!validation.email.valid) {
+    return validation.email.messageKey;
+  }
+
+  if (!validation.password.valid) {
+    return validation.password.messageKey;
+  }
+
+  if (!validation.name.valid) {
+    return validation.name.messageKey;
+  }
+
+  return undefined;
+}

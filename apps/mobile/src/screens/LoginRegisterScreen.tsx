@@ -11,7 +11,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
 import { getAuthErrorMessageKey } from "../services/authErrorMessage";
-import { PASSWORD_MIN_LENGTH, validateAuthForm } from "../services/authValidation";
+import { PASSWORD_MIN_LENGTH, getPrimaryAuthValidationMessageKey, validateAuthForm } from "../services/authValidation";
 import { colors, spacing } from "../theme";
 
 type FieldName = "email" | "password" | "name";
@@ -37,6 +37,7 @@ export function LoginRegisterScreen() {
     () => validateAuthForm({ email, password, name, mode }),
     [email, password, name, mode]
   );
+  const disabledReasonKey = !loading && !validation.valid ? getPrimaryAuthValidationMessageKey(validation) : undefined;
 
   function markTouched(field: FieldName) {
     setTouched((current) => (current[field] ? current : { ...current, [field]: true }));
@@ -222,6 +223,13 @@ export function LoginRegisterScreen() {
             loading={loading}
             disabled={!validation.valid || loading}
           />
+          {disabledReasonKey ? (
+            <Text style={[styles.disabledReason, { color: themeColors.muted }]}>
+              {mode === "register"
+                ? t("auth.disabled.register", { reason: t(disabledReasonKey, { min: PASSWORD_MIN_LENGTH }) })
+                : t("auth.disabled.login", { reason: t(disabledReasonKey, { min: PASSWORD_MIN_LENGTH }) })}
+            </Text>
+          ) : null}
           <AppleSignInButton
             loading={loading}
             separatorLabel={t("auth.or")}
@@ -322,6 +330,14 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "700",
     paddingHorizontal: spacing.xs
+  },
+  disabledReason: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+    textAlign: "center",
+    paddingHorizontal: spacing.sm
   },
   demoCopy: {
     color: colors.muted,

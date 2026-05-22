@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   PASSWORD_MIN_LENGTH,
+  getPrimaryAuthValidationMessageKey,
   validateAuthForm,
   validateEmail,
   validateName,
@@ -97,5 +98,35 @@ describe("validateAuthForm", () => {
       mode: "register"
     });
     expect(result.valid).toBe(true);
+  });
+});
+
+describe("getPrimaryAuthValidationMessageKey", () => {
+  it("returns the email issue before the password issue", () => {
+    const validation = validateAuthForm({ email: "", password: "", name: "", mode: "register" });
+
+    expect(getPrimaryAuthValidationMessageKey(validation)).toBe("auth.validation.email.required");
+  });
+
+  it("returns the password issue after email is valid", () => {
+    const validation = validateAuthForm({
+      email: "user@cardwise.app",
+      password: "short",
+      name: "",
+      mode: "register"
+    });
+
+    expect(getPrimaryAuthValidationMessageKey(validation)).toBe("auth.validation.password.length");
+  });
+
+  it("returns undefined when the form is valid", () => {
+    const validation = validateAuthForm({
+      email: "user@cardwise.app",
+      password: "long-enough",
+      name: "",
+      mode: "register"
+    });
+
+    expect(getPrimaryAuthValidationMessageKey(validation)).toBeUndefined();
   });
 });
