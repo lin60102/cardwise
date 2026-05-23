@@ -60,6 +60,6 @@ Users may:
 
 For privacy or support requests, contact:
 
-`support@kensa.studio`
+`kensa.support@gmail.com`
 
 Replace this email before publishing if a different support address is used.

@@ -4,7 +4,7 @@ CardWise helps users choose the best saved credit card for common purchase categ
 
 ## Contact
 
-Email: `support@kensa.studio`
+Email: `kensa.support@gmail.com`
 
 Include:
 
