@@ -17,14 +17,15 @@ import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
 import type { ScreenProps } from "../navigation/types";
 import { api, type WalletCard } from "../services/api";
+import { getScreenshotWalletCards, isScreenshotMode } from "../services/screenshotMode";
 import { colors, spacing } from "../theme";
 
 export function MyWalletScreen({ navigation }: ScreenProps<"MyWallet">) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { colors: themeColors, mode } = useAppTheme();
-  const [wallet, setWallet] = useState<WalletCard[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [wallet, setWallet] = useState<WalletCard[]>(() => (isScreenshotMode ? getScreenshotWalletCards() : []));
+  const [loading, setLoading] = useState(!isScreenshotMode);
   const [removingCardId, setRemovingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const displayName = user?.name?.split(" ")[0] || user?.email?.split("@")[0] || "CardWise";
@@ -49,6 +50,10 @@ export function MyWalletScreen({ navigation }: ScreenProps<"MyWallet">) {
 
   useFocusEffect(
     useCallback(() => {
+      if (isScreenshotMode) {
+        return undefined;
+      }
+
       let active = true;
       setLoading(true);
       void loadWallet(() => active);

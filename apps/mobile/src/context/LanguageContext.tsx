@@ -1,6 +1,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import type { PurchaseCategory } from "@cardwise/shared";
 import { categoryLabels, type Language, supportedLanguages, translations } from "../i18n/translations";
+import { isScreenshotMode } from "../services/screenshotMode";
 import { storage, storageKeys } from "../services/storage";
 
 interface LanguageContextValue {
@@ -28,6 +29,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en");
 
   useEffect(() => {
+    if (isScreenshotMode) {
+      return;
+    }
+
     async function restoreLanguage() {
       const storedLanguage = await storage.getItem(storageKeys.language);
       const matchedLanguage = supportedLanguages.find((item) => item.code === storedLanguage);

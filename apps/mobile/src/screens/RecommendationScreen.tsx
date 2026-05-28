@@ -19,16 +19,19 @@ import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
 import type { ScreenProps } from "../navigation/types";
 import { api } from "../services/api";
+import { getScreenshotRecommendation, isScreenshotMode } from "../services/screenshotMode";
 import { colors, spacing } from "../theme";
 
 export function RecommendationScreen({ navigation }: ScreenProps<"Recommendation">) {
   const { user } = useAuth();
   const { t, categoryLabel } = useLanguage();
   const { colors: themeColors } = useAppTheme();
-  const [category, setCategory] = useState<PurchaseCategory>("Dining");
-  const [purchaseAmount, setPurchaseAmount] = useState("");
-  const [showAmountDetails, setShowAmountDetails] = useState(false);
-  const [result, setResult] = useState<RecommendationResult | null>(null);
+  const [category, setCategory] = useState<PurchaseCategory>(isScreenshotMode ? "Groceries" : "Dining");
+  const [purchaseAmount, setPurchaseAmount] = useState(isScreenshotMode ? "1500" : "");
+  const [showAmountDetails, setShowAmountDetails] = useState(isScreenshotMode);
+  const [result, setResult] = useState<RecommendationResult | null>(() =>
+    isScreenshotMode ? getScreenshotRecommendation("Groceries") : null
+  );
   const [pendingCategory, setPendingCategory] = useState<PurchaseCategory | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

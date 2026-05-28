@@ -22,13 +22,18 @@ import { SupportScreen } from "./src/screens/SupportScreen";
 import type { MainTabParamList, RootStackParamList } from "./src/navigation/types";
 import { LoadingState } from "./src/components/LoadingState";
 import { MainTabBar } from "./src/components/MainTabBar";
+import { isScreenshotMode, screenshotStartScreen } from "./src/services/screenshotMode";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabsNavigator() {
+  const screenshotInitialTab =
+    screenshotStartScreen === "recommendation" ? "Recommendation" : "MyWallet";
+
   return (
     <Tab.Navigator
+      initialRouteName={isScreenshotMode ? screenshotInitialTab : undefined}
       tabBar={(props) => <MainTabBar {...props} />}
       screenOptions={{
         headerShown: false,
@@ -51,6 +56,40 @@ function RootNavigator() {
 
   if (isBooting) {
     return <LoadingState label={`${t("common.loading")} CardWise`} />;
+  }
+
+  const screenshotInitialRoute =
+    screenshotStartScreen === "onboarding"
+      ? "Onboarding"
+      : screenshotStartScreen === "paywall"
+        ? "Paywall"
+        : screenshotStartScreen === "annualDashboard"
+          ? "AnnualDashboard"
+          : "MainTabs";
+
+  if (isScreenshotMode) {
+    return (
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName={screenshotInitialRoute}
+          screenOptions={{
+            headerStyle: { backgroundColor: colors.background },
+            headerShadowVisible: false,
+            headerTitleStyle: { color: colors.text, fontWeight: "700" },
+            contentStyle: { backgroundColor: colors.background }
+          }}
+        >
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="MainTabs" component={MainTabsNavigator} options={{ headerShown: false }} />
+          <Stack.Screen name="AddCards" component={AddCardsScreen} options={{ title: t("wallet.addCards") }} />
+          <Stack.Screen name="CardDetail" component={CardDetailScreen} options={{ title: t("detail.title") }} />
+          <Stack.Screen name="Paywall" component={PaywallScreen} options={{ title: "CardWise Premium" }} />
+          <Stack.Screen name="Support" component={SupportScreen} options={{ title: t("support.navTitle") }} />
+          <Stack.Screen name="AnnualDashboard" component={AnnualDashboardScreen} options={{ title: t("wallet.annualValue") }} />
+        </Stack.Navigator>
+        <StatusBar style={mode === "dark" ? "light" : "dark"} />
+      </NavigationContainer>
+    );
   }
 
   return (

@@ -15,6 +15,7 @@ import {
   type PremiumOfferingPlan,
   type PremiumPlanId
 } from "../services/revenueCat";
+import { isScreenshotMode } from "../services/screenshotMode";
 import { colors, spacing } from "../theme";
 
 const plans = [
@@ -36,13 +37,17 @@ export function PaywallScreen({ route, navigation }: ScreenProps<"Paywall">) {
   const { syncRevenueCatSubscription } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<PremiumPlanId>("yearly");
   const [offeringPlans, setOfferingPlans] = useState<PremiumOfferingPlan[]>([]);
-  const [offeringsLoading, setOfferingsLoading] = useState(true);
-  const [message, setMessage] = useState<string | null>(route.params?.reason ?? null);
+  const [offeringsLoading, setOfferingsLoading] = useState(!isScreenshotMode);
+  const [message, setMessage] = useState<string | null>(isScreenshotMode ? null : route.params?.reason ?? null);
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const mountedRef = useRef(true);
 
   useEffect(() => {
+    if (isScreenshotMode) {
+      return;
+    }
+
     let active = true;
     mountedRef.current = true;
 

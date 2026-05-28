@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { isScreenshotMode } from "../services/screenshotMode";
 import { storage, storageKeys } from "../services/storage";
 import { type AppColors, type ThemeMode, themePalettes } from "../theme";
 
@@ -14,6 +15,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>("light");
 
   useEffect(() => {
+    if (isScreenshotMode) {
+      return;
+    }
+
     async function restoreTheme() {
       const storedMode = await storage.getItem(storageKeys.themeMode);
       if (storedMode === "light" || storedMode === "dark") {

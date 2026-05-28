@@ -3,6 +3,7 @@ import { ApiError, api, DEMO_TOKEN, type AppleSignInPayload, type AuthRequestOpt
 import { refreshApiAuthToken, setApiAuthToken } from "../services/authTokenState";
 import { ensureLocalCardCacheSeeded } from "../services/localCardCache";
 import { configureRevenueCat } from "../services/revenueCat";
+import { isScreenshotMode, screenshotUser } from "../services/screenshotMode";
 import { storage, storageKeys } from "../services/storage";
 
 /** True for any error that signals the stored token is no longer valid. */
@@ -29,10 +30,10 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [hasOnboarded, setHasOnboarded] = useState(false);
-  const [isBooting, setIsBooting] = useState(true);
+  const [token, setToken] = useState<string | null>(isScreenshotMode ? DEMO_TOKEN : null);
+  const [user, setUser] = useState<AuthUser | null>(isScreenshotMode ? screenshotUser : null);
+  const [hasOnboarded, setHasOnboarded] = useState(isScreenshotMode);
+  const [isBooting, setIsBooting] = useState(!isScreenshotMode);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function bootstrap() {
       try {
+        if (isScreenshotMode) {
+          setApiAuthToken(DEMO_TOKEN);
+          setToken(DEMO_TOKEN);
+          setUser(screenshotUser);
+          setHasOnboarded(true);
+          return;
+        }
+
         await ensureLocalCardCacheSeeded();
 
         const [storedToken, storedUserRaw, storedOnboarded] = await Promise.all([

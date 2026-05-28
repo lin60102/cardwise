@@ -9,16 +9,21 @@ import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import type { ScreenProps } from "../navigation/types";
 import { api, type WalletCard } from "../services/api";
+import { getScreenshotWalletCards, isScreenshotMode } from "../services/screenshotMode";
 import { colors, spacing } from "../theme";
 
 export function AnnualDashboardScreen({ navigation }: ScreenProps<"AnnualDashboard">) {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [wallet, setWallet] = useState<WalletCard[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [wallet, setWallet] = useState<WalletCard[]>(() => (isScreenshotMode ? getScreenshotWalletCards() : []));
+  const [loading, setLoading] = useState(!isScreenshotMode);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isScreenshotMode) {
+      return;
+    }
+
     let active = true;
 
     async function loadWallet() {

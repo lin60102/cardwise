@@ -9,6 +9,7 @@ import {
   isAdMobNativeModuleLinked,
   isExpoGoRuntime
 } from "../services/ads";
+import { isScreenshotMode } from "../services/screenshotMode";
 import { spacing } from "../theme";
 import { AdPlaceholder } from "./AdPlaceholder";
 
@@ -63,6 +64,10 @@ export function AdBanner() {
   useEffect(() => {
     let isMounted = true;
 
+    if (isScreenshotMode) {
+      return undefined;
+    }
+
     if (!nativeAdsAvailable) {
       debugAdMob("skipped load: canUseNativeAds() === false");
       return undefined;
@@ -109,6 +114,10 @@ export function AdBanner() {
       isMounted = false;
     };
   }, [nativeAdsAvailable]);
+
+  if (isScreenshotMode) {
+    return null;
+  }
 
   if (!nativeAdsAvailable || loadFailed || !bannerModule) {
     debugAdMob("rendering placeholder", {

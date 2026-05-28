@@ -14,6 +14,7 @@ import {
   upsertCardsToLocalCache
 } from "./localCardCache";
 import { getApiAuthToken } from "./authTokenState";
+import { getScreenshotRecommendation, getScreenshotWalletCards, isScreenshotMode } from "./screenshotMode";
 import { storage, storageKeys } from "./storage";
 import { withRetry } from "../utils/withRetry";
 
@@ -239,6 +240,10 @@ export const api = {
     }
   },
   listWallet: async () => {
+    if (isScreenshotMode) {
+      return { cards: getScreenshotWalletCards() };
+    }
+
     if (await isDemoSession()) {
       return { cards: await getDemoWalletCards() };
     }
@@ -291,6 +296,10 @@ export const api = {
     });
   },
   recommendBestCard: async (payload: { category: PurchaseCategory; purchaseAmount?: number }) => {
+    if (isScreenshotMode) {
+      return getScreenshotRecommendation(payload.category);
+    }
+
     if (await isDemoSession()) {
       const walletCards = await getDemoWalletCards();
       return getBestCardRecommendation({
@@ -306,6 +315,10 @@ export const api = {
     });
   },
   getSubscriptionStatus: async () => {
+    if (isScreenshotMode) {
+      return { plan: "PREMIUM" as const, subscription: { source: "screenshot" } };
+    }
+
     if (await isDemoSession()) {
       return { plan: "FREE" as const, subscription: null };
     }

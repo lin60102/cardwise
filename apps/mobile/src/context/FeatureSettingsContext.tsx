@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { isScreenshotMode } from "../services/screenshotMode";
 import { storage, storageKeys } from "../services/storage";
 
 interface FeatureSettingsContextValue {
@@ -9,9 +10,13 @@ interface FeatureSettingsContextValue {
 const FeatureSettingsContext = createContext<FeatureSettingsContextValue | undefined>(undefined);
 
 export function FeatureSettingsProvider({ children }: { children: ReactNode }) {
-  const [showBusinessCards, setShowBusinessCardsState] = useState(false);
+  const [showBusinessCards, setShowBusinessCardsState] = useState(isScreenshotMode);
 
   useEffect(() => {
+    if (isScreenshotMode) {
+      return;
+    }
+
     async function restore() {
       const stored = await storage.getItem(storageKeys.showBusinessCards);
       setShowBusinessCardsState(stored === "true");
