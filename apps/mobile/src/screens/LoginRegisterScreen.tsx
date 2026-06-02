@@ -12,6 +12,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
 import { getAuthErrorMessageKey } from "../services/authErrorMessage";
 import { PASSWORD_MIN_LENGTH, getPrimaryAuthValidationMessageKey, validateAuthForm } from "../services/authValidation";
+import { isScreenshotMode } from "../services/screenshotMode";
 import { colors, spacing } from "../theme";
 
 type FieldName = "email" | "password" | "name";
@@ -251,10 +252,12 @@ export function LoginRegisterScreen() {
           />
         </InfoCard>
 
-        <InfoCard tone="info">
-          <Text style={[styles.demoCopy, { color: themeColors.muted }]}>{t("auth.demoCopy")}</Text>
-          <AppButton title={t("common.tryDemo")} variant="secondary" onPress={continueDemo} loading={loading} disabled={loading} />
-        </InfoCard>
+        {isScreenshotMode ? (
+          <InfoCard tone="info">
+            <Text style={[styles.demoCopy, { color: themeColors.muted }]}>{t("auth.demoCopy")}</Text>
+            <AppButton title={t("common.tryDemo")} variant="secondary" onPress={continueDemo} loading={loading} disabled={loading} />
+          </InfoCard>
+        ) : null}
       </Screen>
     </KeyboardAvoidingView>
   );

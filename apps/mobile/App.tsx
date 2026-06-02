@@ -22,7 +22,8 @@ import { SupportScreen } from "./src/screens/SupportScreen";
 import type { MainTabParamList, RootStackParamList } from "./src/navigation/types";
 import { LoadingState } from "./src/components/LoadingState";
 import { MainTabBar } from "./src/components/MainTabBar";
-import { isScreenshotMode, screenshotStartScreen } from "./src/services/screenshotMode";
+import { debugRuntime } from "./src/services/runtimeDiagnostics";
+import { getScreenshotModeDebugState, isScreenshotMode, screenshotStartScreen } from "./src/services/screenshotMode";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -50,9 +51,17 @@ function MainTabsNavigator() {
 }
 
 function RootNavigator() {
-  const { token, hasOnboarded, isBooting } = useAuth();
+  const { token, user, hasOnboarded, isBooting } = useAuth();
   const { t } = useLanguage();
   const { colors, mode } = useAppTheme();
+
+  debugRuntime("Navigation", "root gating", {
+    screenshotMode: getScreenshotModeDebugState(),
+    isBooting,
+    hasToken: Boolean(token),
+    userPlan: user?.plan ?? null,
+    hasOnboarded
+  });
 
   if (isBooting) {
     return <LoadingState label={`${t("common.loading")} CardWise`} />;
@@ -102,10 +111,10 @@ function RootNavigator() {
           contentStyle: { backgroundColor: colors.background }
         }}
       >
-        {!hasOnboarded ? (
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-        ) : !token ? (
+        {!token || !user ? (
           <Stack.Screen name="LoginRegister" component={LoginRegisterScreen} options={{ headerShown: false }} />
+        ) : !hasOnboarded ? (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         ) : (
           <>
             <Stack.Screen name="MainTabs" component={MainTabsNavigator} options={{ headerShown: false }} />

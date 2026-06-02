@@ -31,10 +31,10 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(isScreenshotMode ? DEMO_TOKEN : null);
-  const [user, setUser] = useState<AuthUser | null>(isScreenshotMode ? screenshotUser : null);
-  const [hasOnboarded, setHasOnboarded] = useState(isScreenshotMode);
-  const [isBooting, setIsBooting] = useState(!isScreenshotMode);
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [hasOnboarded, setHasOnboarded] = useState(false);
+  const [isBooting, setIsBooting] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,8 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void resetRevenueCatCustomer();
       await Promise.all([
         storage.removeItem(storageKeys.authToken),
-        storage.removeItem(storageKeys.authUser)
+        storage.removeItem(storageKeys.authUser),
+        storage.removeItem(storageKeys.demoWallet)
       ]);
+      debugRuntime("Auth", "stored session cleared", {
+        authUserSource: "none",
+        user: null,
+        token: null
+      });
     }
 
     async function bootstrap() {
@@ -69,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(screenshotUser);
           setHasOnboarded(true);
           debugRuntime("Auth", "screenshot session enabled", {
+            authUserSource: "screenshot demo",
             userPlan: screenshotUser.plan,
             userId: screenshotUser.id
           });
@@ -100,21 +107,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Case A: no token at all → unauthenticated, nothing to validate.
         if (!storedToken) {
-          debugRuntime("Auth", "no stored token found");
+          if (storedUserRaw) {
+            await clearStoredSession();
+          }
+          debugRuntime("Auth", "no stored token found", { authUserSource: "none" });
           return;
         }
 
-        // Case B: demo token → never hits the backend; trust local user data.
-        // If the user JSON is missing the demo session is corrupt, treat as logged out.
+        // Case B: screenshot mode is the only path that can use the demo token.
+        // If a previous demo token leaks into normal runtime, treat it as stale.
         if (storedToken === DEMO_TOKEN) {
-          if (storedUser) {
-            setToken(storedToken);
-            setUser(storedUser);
-            await configureRevenueCat(storedUser.id);
-            debugRuntime("Auth", "restored demo session", { userPlan: storedUser.plan });
-          } else {
-            await clearStoredSession();
-          }
+          await clearStoredSession();
           return;
         }
 
@@ -139,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await storage.setItem(storageKeys.authUser, JSON.stringify(validatedUser));
           await configureRevenueCat(validatedUser.id);
           debugRuntime("Auth", "validated stored session", {
+            authUserSource: "real token",
             userPlan: validatedUser.plan,
             revenueCat: getRevenueCatDebugState()
           });
@@ -157,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(storedUser);
           await configureRevenueCat(storedUser.id);
           debugRuntime("Auth", "kept cached session after validation failure", {
+            authUserSource: "cached real token",
             userPlan: storedUser.plan,
             revenueCat: getRevenueCatDebugState()
           });
@@ -192,6 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       configureRevenueCat(nextUser.id)
     ]);
     debugRuntime("Auth", "persisted session", {
+      authUserSource: nextToken === DEMO_TOKEN ? "screenshot demo" : "real token",
       userPlan: nextUser.plan,
       userId: nextUser.id,
       revenueCat: getRevenueCatDebugState()
@@ -217,12 +223,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await persistSession(response.token, response.user);
       },
       continueAsDemo: async () => {
-        await persistSession(DEMO_TOKEN, {
-          id: "demo-user",
-          email: "demo@cardwise.local",
-          name: "Demo User",
-          plan: "FREE"
-        });
+        if (!isScreenshotMode) {
+          throw new Error("Demo mode is only available while screenshot mode is enabled.");
+        }
+
+        await persistSession(DEMO_TOKEN, screenshotUser);
       },
       logout: async () => {
         setApiAuthToken(null);
@@ -232,11 +237,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await Promise.all([
             storage.removeItem(storageKeys.authToken),
             storage.removeItem(storageKeys.authUser),
+            storage.removeItem(storageKeys.demoWallet),
             resetRevenueCatCustomer()
           ]);
-          debugRuntime("Auth", "logout cleared session", {
+          debugRuntime("Auth", "logout completed", {
             screenshotMode: getScreenshotModeDebugState(),
-            revenueCat: getRevenueCatDebugState()
+            revenueCat: getRevenueCatDebugState(),
+            postLogoutUser: null,
+            postLogoutToken: null
           });
         } catch (logoutError) {
           console.warn("Unable to fully clear persisted CardWise session.", logoutError);
