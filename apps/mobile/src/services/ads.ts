@@ -82,6 +82,7 @@ export async function initializeAds() {
       return true;
     } catch (error) {
       console.warn("AdMob is not available in this runtime.", error);
+      initializationPromise = null;
       return false;
     }
   })();

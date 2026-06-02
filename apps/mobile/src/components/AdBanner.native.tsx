@@ -32,6 +32,8 @@ type BannerModule = {
 };
 
 const DEBUG_PREFIX = "[CardWise/AdMob]";
+const MAX_BANNER_LOAD_RETRIES = 2;
+const BANNER_RETRY_DELAY_MS = 1200;
 
 function debugAdMob(message: string, details?: Record<string, unknown>) {
   debugRuntime("AdMob", message, details);
@@ -42,6 +44,7 @@ export function AdBanner() {
   const { colors } = useAppTheme();
   const [bannerModule, setBannerModule] = useState<BannerModule | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [retryAttempt, setRetryAttempt] = useState(0);
   // Read once on mount. canUseNativeAds() is synchronous and stable for the
   // session: it includes the NativeModules link probe and the env kill switch.
   const nativeAdsAvailable = useMemo(() => canUseNativeAds(), []);
@@ -58,7 +61,8 @@ export function AdBanner() {
     canUseNativeAds: nativeAdsAvailable,
     adUnitId,
     bannerModuleLoaded: bannerModule !== null,
-    loadFailed
+    loadFailed,
+    retryAttempt
   });
 
   useEffect(() => {
@@ -113,10 +117,33 @@ export function AdBanner() {
     return () => {
       isMounted = false;
     };
-  }, [nativeAdsAvailable]);
+  }, [nativeAdsAvailable, retryAttempt]);
+
+  useEffect(() => {
+    if (!loadFailed || !nativeAdsAvailable || retryAttempt >= MAX_BANNER_LOAD_RETRIES) {
+      return undefined;
+    }
+
+    debugAdMob("scheduling banner retry", {
+      nextRetryAttempt: retryAttempt + 1,
+      delayMs: BANNER_RETRY_DELAY_MS
+    });
+
+    const retryTimer = setTimeout(() => {
+      setLoadFailed(false);
+      setRetryAttempt((current) => current + 1);
+    }, BANNER_RETRY_DELAY_MS);
+
+    return () => clearTimeout(retryTimer);
+  }, [loadFailed, nativeAdsAvailable, retryAttempt]);
 
   if (isScreenshotMode) {
     debugAdMob("hidden: screenshot mode enabled");
+    return null;
+  }
+
+  if (user?.plan !== "FREE") {
+    debugAdMob("hidden: user is not ad eligible", { userPlan: user?.plan ?? null });
     return null;
   }
 
@@ -133,13 +160,14 @@ export function AdBanner() {
     <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <BannerAd
         unitId={adUnitId}
+        key={`${adUnitId}-${retryAttempt}`}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{ requestNonPersonalizedAdsOnly: true }}
         onAdLoaded={() => {
           debugAdMob("onAdLoaded", { adUnitId });
         }}
         onAdFailedToLoad={(error: Error) => {
-          console.warn(`${DEBUG_PREFIX} onAdFailedToLoad`, { adUnitId, error });
+          console.warn(`${DEBUG_PREFIX} onAdFailedToLoad`, { adUnitId, retryAttempt, error });
           setLoadFailed(true);
         }}
       />

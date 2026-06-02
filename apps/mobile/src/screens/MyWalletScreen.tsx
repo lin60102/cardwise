@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { FREE_CARD_LIMIT } from "@cardwise/shared";
@@ -9,7 +9,6 @@ import { CardTile } from "../components/CardTile";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InfoCard } from "../components/InfoCard";
-import { LoadingState } from "../components/LoadingState";
 import { PlanBadge } from "../components/PlanBadge";
 import { Screen } from "../components/Screen";
 import { useAuth } from "../context/AuthContext";
@@ -90,10 +89,6 @@ export function MyWalletScreen({ navigation }: ScreenProps<"MyWallet">) {
     }
   }
 
-  if (loading) {
-    return <LoadingState label={`${t("common.loading")} ${t("wallet.cardsInWallet").toLowerCase()}`} />;
-  }
-
   return (
     <Screen>
       <View style={styles.topBar}>
@@ -164,7 +159,16 @@ export function MyWalletScreen({ navigation }: ScreenProps<"MyWallet">) {
         <AppButton title={t("bonus.navTitle")} variant="secondary" onPress={() => navigation.navigate("BonusTracker")} />
       </View>
 
-      {wallet.length === 0 ? (
+      {loading ? (
+        <InfoCard>
+          <View style={styles.walletLoadingRow}>
+            <ActivityIndicator color={themeColors.primary} />
+            <Text style={[styles.walletLoadingText, { color: themeColors.muted }]}>
+              {`${t("common.loading")} ${t("wallet.cardsInWallet").toLowerCase()}`}
+            </Text>
+          </View>
+        </InfoCard>
+      ) : wallet.length === 0 ? (
         <EmptyState
           title={t("wallet.noCards.title")}
           message={t("wallet.noCards.message")}
@@ -318,6 +322,18 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: spacing.sm
+  },
+  walletLoadingRow: {
+    minHeight: 72,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm
+  },
+  walletLoadingText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: "700"
   },
   removeButton: {
     width: 36,
