@@ -19,6 +19,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
 import type { ScreenProps } from "../navigation/types";
 import { api } from "../services/api";
+import { debugRuntime } from "../services/runtimeDiagnostics";
 import { getScreenshotRecommendation, isScreenshotMode } from "../services/screenshotMode";
 import { colors, spacing } from "../theme";
 
@@ -44,12 +45,22 @@ export function RecommendationScreen({ navigation }: ScreenProps<"Recommendation
     t("recommend.loading.step2"),
     t("recommend.loading.step3")
   ];
+  const shouldRenderAd = user?.plan === "FREE";
 
   useEffect(() => {
     return () => {
       mountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    debugRuntime("Ads", "recommendation ad eligibility", {
+      screen: "Recommendation",
+      userPlan: user?.plan ?? null,
+      screenshotMode: isScreenshotMode,
+      shouldRenderAd
+    });
+  }, [shouldRenderAd, user?.plan]);
 
   async function recommend() {
     if (loading) return;
@@ -247,7 +258,7 @@ export function RecommendationScreen({ navigation }: ScreenProps<"Recommendation
         />
       ) : null}
 
-      {user?.plan === "FREE" ? <AdBanner /> : null}
+      {shouldRenderAd ? <AdBanner /> : null}
     </Screen>
   );
 }

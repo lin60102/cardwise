@@ -9,7 +9,8 @@ import {
   isAdMobNativeModuleLinked,
   isExpoGoRuntime
 } from "../services/ads";
-import { isScreenshotMode } from "../services/screenshotMode";
+import { debugRuntime } from "../services/runtimeDiagnostics";
+import { getScreenshotModeDebugState, isScreenshotMode } from "../services/screenshotMode";
 import { spacing } from "../theme";
 import { AdPlaceholder } from "./AdPlaceholder";
 
@@ -33,9 +34,7 @@ type BannerModule = {
 const DEBUG_PREFIX = "[CardWise/AdMob]";
 
 function debugAdMob(message: string, details?: Record<string, unknown>) {
-  if (process.env.EXPO_PUBLIC_ADMOB_DEBUG === "true") {
-    console.log(`${DEBUG_PREFIX} ${message}`, details ?? {});
-  }
+  debugRuntime("AdMob", message, details);
 }
 
 export function AdBanner() {
@@ -51,6 +50,7 @@ export function AdBanner() {
   debugAdMob("render snapshot", {
     userPlan: user?.plan ?? null,
     shouldRenderAd: user?.plan === "FREE",
+    screenshotMode: getScreenshotModeDebugState(),
     envUseTestAds: process.env.EXPO_PUBLIC_ADMOB_USE_TEST_ADS ?? null,
     envEnableNativeAds: process.env.EXPO_PUBLIC_ENABLE_NATIVE_ADS ?? null,
     isExpoGoRuntime: isExpoGoRuntime(),
@@ -116,6 +116,7 @@ export function AdBanner() {
   }, [nativeAdsAvailable]);
 
   if (isScreenshotMode) {
+    debugAdMob("hidden: screenshot mode enabled");
     return null;
   }
 

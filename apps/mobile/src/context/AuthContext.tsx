@@ -2,8 +2,9 @@ import { createContext, type ReactNode, useContext, useEffect, useMemo, useState
 import { ApiError, api, DEMO_TOKEN, type AppleSignInPayload, type AuthRequestOptions, type AuthUser } from "../services/api";
 import { refreshApiAuthToken, setApiAuthToken } from "../services/authTokenState";
 import { ensureLocalCardCacheSeeded } from "../services/localCardCache";
-import { configureRevenueCat } from "../services/revenueCat";
-import { isScreenshotMode, screenshotUser } from "../services/screenshotMode";
+import { configureRevenueCat, getRevenueCatDebugState, resetRevenueCatCustomer } from "../services/revenueCat";
+import { getScreenshotModeDebugState, isScreenshotMode, screenshotUser } from "../services/screenshotMode";
+import { debugRuntime } from "../services/runtimeDiagnostics";
 import { storage, storageKeys } from "../services/storage";
 
 /** True for any error that signals the stored token is no longer valid. */
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setApiAuthToken(null);
       setToken(null);
       setUser(null);
+      void resetRevenueCatCustomer();
       await Promise.all([
         storage.removeItem(storageKeys.authToken),
         storage.removeItem(storageKeys.authUser)
@@ -56,11 +58,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function bootstrap() {
       try {
+        debugRuntime("Auth", "bootstrap begin", {
+          screenshotMode: getScreenshotModeDebugState(),
+          revenueCat: getRevenueCatDebugState()
+        });
+
         if (isScreenshotMode) {
           setApiAuthToken(DEMO_TOKEN);
           setToken(DEMO_TOKEN);
           setUser(screenshotUser);
           setHasOnboarded(true);
+          debugRuntime("Auth", "screenshot session enabled", {
+            userPlan: screenshotUser.plan,
+            userId: screenshotUser.id
+          });
           return;
         }
 
@@ -89,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Case A: no token at all → unauthenticated, nothing to validate.
         if (!storedToken) {
+          debugRuntime("Auth", "no stored token found");
           return;
         }
 
@@ -99,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setToken(storedToken);
             setUser(storedUser);
             await configureRevenueCat(storedUser.id);
+            debugRuntime("Auth", "restored demo session", { userPlan: storedUser.plan });
           } else {
             await clearStoredSession();
           }
@@ -125,6 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(validatedUser);
           await storage.setItem(storageKeys.authUser, JSON.stringify(validatedUser));
           await configureRevenueCat(validatedUser.id);
+          debugRuntime("Auth", "validated stored session", {
+            userPlan: validatedUser.plan,
+            revenueCat: getRevenueCatDebugState()
+          });
         } catch (validationError) {
           if (cancelled) return;
 
@@ -139,6 +156,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setToken(storedToken);
           setUser(storedUser);
           await configureRevenueCat(storedUser.id);
+          debugRuntime("Auth", "kept cached session after validation failure", {
+            userPlan: storedUser.plan,
+            revenueCat: getRevenueCatDebugState()
+          });
         }
       } catch (error) {
         console.warn("Unable to restore CardWise session.", error);
@@ -170,6 +191,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       storage.setItem(storageKeys.authUser, JSON.stringify(nextUser)),
       configureRevenueCat(nextUser.id)
     ]);
+    debugRuntime("Auth", "persisted session", {
+      userPlan: nextUser.plan,
+      userId: nextUser.id,
+      revenueCat: getRevenueCatDebugState()
+    });
   }
 
   const value = useMemo<AuthContextValue>(
@@ -203,7 +229,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(null);
         setUser(null);
         try {
-          await Promise.all([storage.removeItem(storageKeys.authToken), storage.removeItem(storageKeys.authUser)]);
+          await Promise.all([
+            storage.removeItem(storageKeys.authToken),
+            storage.removeItem(storageKeys.authUser),
+            resetRevenueCatCustomer()
+          ]);
+          debugRuntime("Auth", "logout cleared session", {
+            screenshotMode: getScreenshotModeDebugState(),
+            revenueCat: getRevenueCatDebugState()
+          });
         } catch (logoutError) {
           console.warn("Unable to fully clear persisted CardWise session.", logoutError);
         }
@@ -221,6 +255,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const nextUser = { ...user, plan: status.plan };
         setUser(nextUser);
         await storage.setItem(storageKeys.authUser, JSON.stringify(nextUser));
+        debugRuntime("Auth", "subscription refreshed", { previousPlan: user.plan, nextPlan: nextUser.plan });
       },
       redeemPromoCode: async (code) => {
         if (!token || !user) {
@@ -231,6 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const nextUser = { ...user, plan: status.plan };
         setUser(nextUser);
         await storage.setItem(storageKeys.authUser, JSON.stringify(nextUser));
+        debugRuntime("Auth", "promo code updated plan", { previousPlan: user.plan, nextPlan: nextUser.plan });
       },
       syncRevenueCatSubscription: async () => {
         if (!token || !user) {
@@ -241,6 +277,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const nextUser = { ...user, plan: status.plan };
         setUser(nextUser);
         await storage.setItem(storageKeys.authUser, JSON.stringify(nextUser));
+        debugRuntime("Auth", "RevenueCat sync updated plan", {
+          previousPlan: user.plan,
+          nextPlan: nextUser.plan,
+          revenueCat: getRevenueCatDebugState()
+        });
       }
     }),
     [hasOnboarded, isBooting, token, user]

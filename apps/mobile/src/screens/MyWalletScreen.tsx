@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -17,6 +17,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { useAppTheme } from "../context/ThemeContext";
 import type { ScreenProps } from "../navigation/types";
 import { api, type WalletCard } from "../services/api";
+import { debugRuntime } from "../services/runtimeDiagnostics";
 import { getScreenshotWalletCards, isScreenshotMode } from "../services/screenshotMode";
 import { colors, spacing } from "../theme";
 
@@ -29,6 +30,16 @@ export function MyWalletScreen({ navigation }: ScreenProps<"MyWallet">) {
   const [removingCardId, setRemovingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const displayName = user?.name?.split(" ")[0] || user?.email?.split("@")[0] || "CardWise";
+  const shouldRenderAd = user?.plan === "FREE";
+
+  useEffect(() => {
+    debugRuntime("Ads", "wallet ad eligibility", {
+      screen: "MyWallet",
+      userPlan: user?.plan ?? null,
+      screenshotMode: isScreenshotMode,
+      shouldRenderAd
+    });
+  }, [shouldRenderAd, user?.plan]);
 
   const loadWallet = useCallback(async (isActive: () => boolean) => {
     setError(null);
@@ -124,7 +135,7 @@ export function MyWalletScreen({ navigation }: ScreenProps<"MyWallet">) {
         </InfoCard>
       </View>
 
-      {user?.plan === "FREE" ? <AdBanner /> : null}
+      {shouldRenderAd ? <AdBanner /> : null}
 
       <View style={styles.sectionHeader}>
         <View style={styles.sectionHeaderText}>

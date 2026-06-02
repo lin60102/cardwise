@@ -7,11 +7,22 @@ import {
 import { DEMO_CARDS } from "./demoData";
 import type { AuthUser, WalletCard } from "./api";
 
-export const isScreenshotMode = process.env.EXPO_PUBLIC_SCREENSHOT_MODE === "true";
+const screenshotModeEnvValue = process.env.EXPO_PUBLIC_SCREENSHOT_MODE;
+
+export const isScreenshotMode = screenshotModeEnvValue === "true";
 
 export type ScreenshotStartScreen = "onboarding" | "wallet" | "recommendation" | "annualDashboard" | "paywall";
 
 export const screenshotStartScreen = (process.env.EXPO_PUBLIC_SCREENSHOT_START ?? "wallet") as ScreenshotStartScreen;
+
+export function getScreenshotModeDebugState() {
+  return {
+    enabled: isScreenshotMode,
+    rawMode: screenshotModeEnvValue ?? null,
+    rawStart: process.env.EXPO_PUBLIC_SCREENSHOT_START ?? null,
+    startScreen: screenshotStartScreen
+  };
+}
 
 const SCREENSHOT_CARD_IDS = [
   "demo-amex-gold",

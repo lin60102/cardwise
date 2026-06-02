@@ -57,6 +57,33 @@ export async function configureRevenueCat(userId: string) {
   }
 }
 
+export function getRevenueCatDebugState() {
+  return {
+    configuredUserId,
+    premiumEntitlementId,
+    hasIosApiKey: Boolean(iosApiKey),
+    hasAndroidApiKey: Boolean(androidApiKey)
+  };
+}
+
+export async function resetRevenueCatCustomer() {
+  const previousUserId = configuredUserId;
+  configuredUserId = null;
+
+  if (!previousUserId) {
+    return { available: true, skipped: true };
+  }
+
+  try {
+    const Purchases = await loadPurchases();
+    await Purchases.logOut();
+    return { available: true, skipped: false };
+  } catch (error: unknown) {
+    console.warn("Unable to reset RevenueCat customer during logout.", error);
+    return { available: false, skipped: false, message: isUnavailableError(error) };
+  }
+}
+
 function findPackage(packages: PurchasesPackage[], planId: PremiumPlanId) {
   const expectedType = planId === "monthly" ? "MONTHLY" : "ANNUAL";
   const expectedText = planId === "monthly" ? "monthly" : "annual";
